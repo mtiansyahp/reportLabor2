@@ -21,6 +21,8 @@ import DataTable, { TableColumn } from 'react-data-table-component';
 import Sidebar from '../component/sidebar/Sidebar';
 import Navbar from '../component/navbar/Navbar';
 import { api } from '../../api/apiAxios';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
@@ -46,6 +48,7 @@ interface Approval {
     catatan?: string;
     created_at: string;
     evidence: Evidence[];
+
 }
 
 interface ApprovalRow {
@@ -56,6 +59,7 @@ interface ApprovalRow {
     status_approve: string;
     tanggal_approve: string | null;
     url_gambar: string;
+    fullData: Approval;
 }
 
 export default function ApprovalPelaporan() {
@@ -118,9 +122,12 @@ export default function ApprovalPelaporan() {
                 status_approve: ev?.status_approve || 'Dalam Proses',
                 tanggal_approve: ev?.tanggal_approve || null,
                 url_gambar: ev?.url || '',
+                fullData: item, // ✅ pastikan ini ditambahkan
             };
         });
     }, [data]);
+
+
 
     const handleViewCancel = () => {
         setIsViewModalVisible(false);
@@ -186,6 +193,10 @@ export default function ApprovalPelaporan() {
                             setIsViewModalVisible(true);
                         }}
                     />
+                    <Button type="link" onClick={() => generatePDF(row.fullData)}>
+
+                        Unduh PDF
+                    </Button>
                     <DeleteOutlined
                         style={{ cursor: 'pointer', color: 'red' }}
                         onClick={() => {
@@ -210,7 +221,94 @@ export default function ApprovalPelaporan() {
             allowOverflow: true,
             button: true,
         },
+
     ];
+
+    const generatePDF = (data: Approval) => {
+        const doc = new jsPDF();
+
+        const tanggal = new Date(data.created_at || '').toLocaleDateString('id-ID', {
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric',
+        });
+
+        const evidence = data.evidence?.[0] || {
+            user_maker: '',
+            created_at: '',
+            status_approve: '',
+        };
+
+        doc.setFontSize(12);
+        doc.text(`Prabumulih, ${tanggal}`, 140, 20);
+        doc.text('No.: 0391/PLB-Pbm/V/2025', 20, 30);
+
+        doc.setFont(undefined, 'bold');
+        doc.text('Kepada Yth.', 20, 45);
+        doc.text('Manajer Operasional', 20, 52);
+        doc.text('PT. Titis Sampurna', 20, 59);
+        doc.text('di Tempat', 20, 66);
+
+        doc.text('Perihal:', 20, 78);
+        doc.text('Permohonan Persetujuan Pelaporan Barang', 38, 78);
+
+        doc.setFont(undefined, 'normal');
+        doc.text('Dengan hormat,', 20, 88);
+        doc.text(
+            'Sehubungan dengan kebutuhan evaluasi kondisi aset, bersama surat ini kami mengajukan',
+            20,
+            98
+        );
+        doc.text(
+            'permohonan persetujuan pelaporan barang sebagai berikut:',
+            20,
+            105
+        );
+
+        let y = 115;
+        const baris = [
+            ['Nama Barang', data.namaBarang || ''],
+            ['Manufaktur', data.manufaktur || ''],
+            ['Riwayat Rusak', data.riwayat || ''],
+            ['Kelayakan', data.kelayakan || ''],
+            ['Catatan', data.catatan || ''],
+        ];
+        baris.forEach(([label, value]) => {
+            doc.text(`${label} : ${value}`, 25, y);
+            y += 8;
+        });
+
+        y += 5;
+        doc.text('Barang tersebut telah diajukan oleh:', 20, y); y += 8;
+        doc.text(`Nama Pengaju  : ${evidence.user_maker || ''}`, 25, y); y += 8;
+        doc.text(
+            `Tanggal Ajuan : ${evidence.created_at
+                ? new Date(evidence.created_at).toLocaleDateString('id-ID')
+                : ''
+            }`,
+            25,
+            y
+        ); y += 8;
+        doc.text(`Status Approve: ${evidence.status_approve || ''}`, 25, y); y += 20;
+
+        doc.text(
+            'Demikian surat permohonan ini kami sampaikan. Besar harapan kami untuk dapat memperoleh',
+            20,
+            y
+        ); y += 8;
+        doc.text(
+            'persetujuan atas pelaporan barang tersebut. Atas perhatian dan kerja samanya, kami ucapkan terima kasih.',
+            20,
+            y
+        ); y += 20;
+
+        doc.text('Hormat kami,', 20, y);
+        y += 7;
+        doc.text(evidence.user_maker || '', 20, y);
+        doc.text('Pengaju Pelaporan', 20, y + 7);
+
+        doc.save(`Surat_Permohonan_${data.namaBarang || 'Barang'}.pdf`);
+    };
 
     return (
         <Layout style={styles.root}>
