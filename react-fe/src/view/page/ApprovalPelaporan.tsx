@@ -246,7 +246,7 @@ export default function ApprovalPelaporan() {
         doc.text(`Prabumulih, ${tanggal}`, 140, 20);
         doc.text('No.: 0391/PLB-Pbm/V/2025', 20, 30);
 
-        doc.setFont(undefined, 'bold');
+        doc.setFont('helvetica', 'bold');
         doc.text('Kepada Yth.', 20, 45);
         doc.text('Manajer Operasional', 20, 52);
         doc.text('PT. Titis Sampurna', 20, 59);
@@ -255,7 +255,7 @@ export default function ApprovalPelaporan() {
         doc.text('Perihal:', 20, 78);
         doc.text('Permohonan Persetujuan Pelaporan Barang', 38, 78);
 
-        doc.setFont(undefined, 'normal');
+        doc.setFont('helvetica', 'normal');
         doc.text('Dengan hormat,', 20, 88);
         doc.text(
             'Sehubungan dengan kebutuhan evaluasi kondisi aset, bersama surat ini kami mengajukan',
