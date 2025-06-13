@@ -11,6 +11,9 @@ import {
     Input,
     Spin,
     message,
+    Drawer,
+    Progress,
+    Tooltip
 } from 'antd';
 import {
     EyeOutlined,
@@ -393,14 +396,14 @@ export default function ApprovalPelaporan() {
                     </Card>
 
                     {/* View Modal */}
-                    <Modal
-                        visible={isViewModalVisible}
-                        footer={null}
+                    <Drawer
+                        title="Detail Pelaporan"
+                        placement="right"
+                        onClose={handleViewCancel}
+                        open={isViewModalVisible}
+                        width={480}
                         closable={false}
-                        centered
                         bodyStyle={{ padding: 0 }}
-                        className="custom-view-modal"
-                        onCancel={handleViewCancel}
                     >
                         <div style={styles.viewHeader}>
                             <Title level={4} style={{ margin: 0 }}>
@@ -452,9 +455,7 @@ export default function ApprovalPelaporan() {
                                         <Text type="secondary" style={styles.viewLabel}>
                                             Status Approval
                                         </Text>
-                                        <Tag
-                                            color={selectedReport.status_approve ? 'blue' : 'orange'}
-                                        >
+                                        <Tag color={selectedReport.status_approve ? 'blue' : 'orange'}>
                                             {selectedReport.status_approve || 'On Proses'}
                                         </Tag>
                                     </div>
@@ -468,13 +469,26 @@ export default function ApprovalPelaporan() {
                                                 : 'Sedang Diajukan'}
                                         </Text>
                                     </div>
+                                    <div style={styles.viewSection}>
+                                        <Text type="secondary" style={styles.viewLabel}>
+                                            Kelayakan
+                                        </Text>
+                                        <Tooltip title={`${selectedReport.fullData.kelayakan || 0}%`}>
+                                            <Progress
+                                                type="circle"
+                                                percent={Number(selectedReport.fullData.kelayakan || 0)}
+                                                width={80}
+                                            />
+                                        </Tooltip>
+                                    </div>
                                 </>
                             )}
                         </div>
                         <div style={styles.viewFooter}>
                             <Button onClick={handleViewCancel}>Close</Button>
                         </div>
-                    </Modal>
+                    </Drawer>
+
                 </Content>
             </Layout>
         </Layout>

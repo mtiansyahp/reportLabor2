@@ -12,6 +12,7 @@ import {
     Modal,
     Spin,
     message,
+    InputNumber,
 } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
 import type { UploadFile, UploadChangeParam } from 'antd/es/upload/interface';
@@ -44,7 +45,7 @@ export default function PelaporanBarang() {
     const [category, setCategory] = useState<string>();
     const [item, setItem] = useState<string>();
     const [riwayat, setRiwayat] = useState<string>();
-    const [kelayakan, setKelayakan] = useState<string>();
+    const [kelayakan, setKelayakan] = useState<number | null>(null);
     const [catatan, setCatatan] = useState<string>('');
     const [fileList, setFileList] = useState<UploadFile[]>([]);
 
@@ -277,21 +278,21 @@ export default function PelaporanBarang() {
 
                                 {/* Nilai Kelayakan */}
                                 <Form.Item
-                                    label="Nilai kelayakan barang?"
+                                    label="Nilai kelayakan barang (%)"
                                     name="kelayakan"
-                                    rules={[{ required: true, message: 'Pilih salah satu' }]}
+                                    rules={[{ required: true, message: 'Masukkan nilai antara 1 hingga 100' }]}
                                     style={styles.formItem}
                                 >
-                                    <Radio.Group
+                                    <InputNumber
+                                        min={1}
+                                        max={100}
                                         value={kelayakan}
-                                        onChange={e => setKelayakan(e.target.value)}
-                                    >
-                                        <Radio value="sangat-layak">Sangat Layak</Radio>
-                                        <Radio value="layak">Layak</Radio>
-                                        <Radio value="tidak">Tidak</Radio>
-                                        <Radio value="tidak-layak">Tidak Layak</Radio>
-                                    </Radio.Group>
+                                        onChange={value => setKelayakan(value)}
+                                        addonAfter="%"
+                                        style={{ width: '100%' }}
+                                    />
                                 </Form.Item>
+
 
                                 {/* Catatan */}
                                 <Form.Item
