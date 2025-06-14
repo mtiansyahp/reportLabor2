@@ -40,7 +40,7 @@ export default function PelaporanBarang() {
     const [totalRows, setTotalRows] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [loading, setLoading] = useState(false);
-    const perPage = 50;
+    const perPage = 100;
 
     const [category, setCategory] = useState<string>();
     const [item, setItem] = useState<string>();
@@ -213,28 +213,26 @@ export default function PelaporanBarang() {
                         >
                             <Form layout="vertical" onFinish={onFinish}>
                                 {/* Manufaktur */}
-                                <Form.Item
-                                    label="Manufaktur"
-                                    name="category"
-                                    rules={[{ required: true, message: 'Pilih manufaktur' }]}
-                                    style={styles.formItem}
-                                >
+                                <Form.Item label="Manufaktur" name="category" rules={[{ required: true }]}>
                                     <Select
                                         placeholder="Pilih manufaktur"
+                                        allowClear
                                         value={category}
                                         onChange={val => {
                                             setCategory(val);
                                             setItem(undefined);
                                         }}
-                                        allowClear
+                                        // refetch saat dropdown dibuka
+                                        onDropdownVisibleChange={open => {
+                                            if (open) fetchAssets();
+                                        }}
                                     >
                                         {manufakturs.map(mf => (
-                                            <Option key={mf} value={mf}>
-                                                {mf}
-                                            </Option>
+                                            <Option key={mf} value={mf}>{mf}</Option>
                                         ))}
                                     </Select>
                                 </Form.Item>
+
 
                                 {/* Nama Barang */}
                                 <Form.Item
