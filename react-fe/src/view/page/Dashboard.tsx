@@ -15,8 +15,6 @@ import {
 } from 'antd';
 import Sidebar from '../component/sidebar/Sidebar';
 import Navbar from '../component/navbar/Navbar';
-import { IconDatabase, IconDeviceAnalytics, IconUserX } from '@tabler/icons-react';
-import { IconFileText } from '@tabler/icons-react';
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
@@ -30,6 +28,7 @@ interface Approval {
 }
 
 interface Asset {
+    kondisi_barang: any;
     id: string;
     nama: string;
     kategori: string;
@@ -37,51 +36,14 @@ interface Asset {
     jumlah: number;
 }
 
-// Stat cards data: first uses an image, the rest use Tabler icons
-const stats = [
-    {
-        label: 'Total Pelaporan',
-        value: 43,
-        icon: (
-            <img
-                src="/assets/analysis-graph.png"
-                alt="Total Pelaporan"
-                width={60}
-                height={60}
-            />
-        ),
-    },
-    {
-        label: 'Total Asset Tercatat',
-        value: 10,
-        icon: <img
-            src="/assets/job-search.png"
-            alt="Total Pelaporan"
-            width={60}
-            height={60}
-        />,
-    },
-    {
-        label: 'Total Asset Layak',
-        value: 10,
-        icon: <img
-            src="/assets/planning.png"
-            alt="Total Pelaporan"
-            width={60}
-            height={60}
-        />,
-    },
-    {
-        label: 'Total Asset Tidak Layak',
-        value: 20,
-        icon: <img
-            src="/assets/teamwork.png"
-            alt="Total Pelaporan"
-            width={60}
-            height={60}
-        />,
-    },
-];
+interface Summary {
+    total_asset: number;
+    total_asset_layak: number;
+    total_asset_tidak_layak: number;
+    ratio_asset_layak: number;
+    ratio_asset_tidak_layak: number;
+    total_pelaporan: number;
+}
 
 const Dashboard: React.FC = () => {
     const [approvalData, setApprovalData] = useState<Approval[]>([]);
@@ -89,10 +51,15 @@ const Dashboard: React.FC = () => {
     const [loadingChart, setLoadingChart] = useState(false);
     const [loadingAssets, setLoadingAssets] = useState(false);
 
-    // Fetch both approvals and assets
+    // summary state
+    const [summary, setSummary] = useState<Summary | null>(null);
+    const [loadingSummary, setLoadingSummary] = useState(false);
+
+    // fetch approvals & assets
     useEffect(() => {
         setLoadingChart(true);
         setLoadingAssets(true);
+
         Promise.all([
             fetch('http://localhost:3001/approval-pelaporan').then(r => r.json()),
             fetch('http://localhost:3001/assets').then(r => r.json()),
@@ -111,7 +78,27 @@ const Dashboard: React.FC = () => {
             });
     }, []);
 
-    // 7-day area chart
+    // fetch summary from our Laravel API
+    useEffect(() => {
+        setLoadingSummary(true);
+        fetch('http://localhost:8000/api/equipment-summary')
+            .then(r => {
+                if (!r.ok) throw new Error('Network response was not ok');
+                return r.json();
+            })
+            .then((data: Summary) => {
+                setSummary(data);
+            })
+            .catch(err => {
+                console.error(err);
+                message.error('Gagal mengambil ringkasan aset');
+            })
+            .finally(() => {
+                setLoadingSummary(false);
+            });
+    }, []);
+
+    // 7-day area chart data
     const { categories, series } = useMemo(() => {
         const now = new Date();
         const days: Date[] = [];
@@ -127,8 +114,10 @@ const Dashboard: React.FC = () => {
         const rejectData: number[] = [];
         const pendingData: number[] = [];
         days.forEach(day => {
-            const start = new Date(day); start.setHours(0, 0, 0, 0);
-            const end = new Date(day); end.setHours(23, 59, 59, 999);
+            const start = new Date(day);
+            start.setHours(0, 0, 0, 0);
+            const end = new Date(day);
+            end.setHours(23, 59, 59, 999);
             let a = 0, r = 0, p = 0;
             approvalData.forEach(item => {
                 const c = new Date(item.created_at);
@@ -155,24 +144,29 @@ const Dashboard: React.FC = () => {
     const areaOptions: ApexOptions = {
         chart: { type: 'area', stacked: true, toolbar: { show: false } },
         xaxis: { categories },
-        yaxis: {},
         dataLabels: { enabled: false },
         legend: { position: 'top' },
         fill: { opacity: 0.8 },
         colors: ['#52c41a', '#f5222d', '#d9d9d9'],
     };
 
-    // Radial bar: percentage of Layak units
+    // radial bar for % Layak
     const totalJumlah = useMemo(() => assets.reduce((sum, a) => sum + a.jumlah, 0), [assets]);
+    // pakai toLowerCase agar 'layak'/'Layak' ter‐match
     const layakJumlah = useMemo(
-        () => assets.filter(a => a.status === 'Layak').reduce((sum, a) => sum + a.jumlah, 0),
+        () =>
+            assets
+                .filter(a => a.kondisi_barang.toLowerCase() === 'baik')
+                .reduce((sum, a) => sum + a.jumlah, 0),
         [assets]
     );
-    const layakPercent = totalJumlah > 0
-        ? Math.round((layakJumlah / totalJumlah) * 100)
-        : 0;
 
-    const radialSeries = [layakPercent];
+
+    const layakPercent = totalJumlah > 0 ? Math.round((layakJumlah / totalJumlah) * 100) : 0;
+
+    // sesudah:
+    const radialSeries = [summary?.ratio_asset_layak ? summary.ratio_asset_layak * 100 : 0];
+
     const radialOptions: ApexOptions = {
         chart: { type: 'radialBar' },
         plotOptions: {
@@ -183,7 +177,7 @@ const Dashboard: React.FC = () => {
                     value: {
                         show: true,
                         fontSize: '20px',
-                        formatter: val => `${val}%`,
+                        formatter: val => `${val.toFixed(2)}%`,  // ← iki
                     },
                 },
             },
@@ -205,7 +199,7 @@ const Dashboard: React.FC = () => {
         colors: ['#008FFB'],
     };
 
-    // Recent 4 pelaporan
+    // recent 4 pelaporan
     const recentActivities = useMemo(() => {
         return approvalData
             .slice()
@@ -214,14 +208,35 @@ const Dashboard: React.FC = () => {
             .map(item => ({
                 title: `Pelaporan ${item.namaBarang} oleh ${item.user_maker}`,
                 date: new Date(item.created_at).toLocaleString('id-ID', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
+                    day: '2-digit', month: 'short', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
                 }),
             }));
     }, [approvalData]);
+
+    // stats cards, driven by summary
+    const stats = [
+        {
+            label: 'Total Pelaporan',
+            value: summary?.total_pelaporan ?? 0,
+            icon: <img src="/assets/analysis-graph.png" alt="" width={60} height={60} />,
+        },
+        {
+            label: 'Total Asset Tercatat',
+            value: summary?.total_asset ?? 0,
+            icon: <img src="/assets/job-search.png" alt="" width={60} height={60} />,
+        },
+        {
+            label: 'Total Asset Layak',
+            value: summary?.total_asset_layak ?? 0,
+            icon: <img src="/assets/planning.png" alt="" width={60} height={60} />,
+        },
+        {
+            label: 'Total Asset Tidak Layak',
+            value: summary?.total_asset_tidak_layak ?? 0,
+            icon: <img src="/assets/teamwork.png" alt="" width={60} height={60} />,
+        },
+    ];
 
     return (
         <Layout style={styles.root}>
@@ -232,61 +247,51 @@ const Dashboard: React.FC = () => {
                     <div style={styles.inner}>
 
                         {/* Stats Cards */}
-                        <Row gutter={[24, 24]}>
-                            {stats.map((s, i) => (
-                                <Col xs={24} sm={12} md={6} key={i}>
-                                    <Card
-                                        style={styles.statCard}
-                                        bodyStyle={{ padding: 20, position: 'relative' }}
-                                    >
-                                        <div style={styles.cardIconWrapper}>
-                                            {React.cloneElement(s.icon, { style: styles.cardIcon })}
-                                        </div>
-                                        <Title level={3} style={styles.statValue}>{s.value}</Title>
-                                        <Text style={styles.statLabel}>{s.label}</Text>
-                                    </Card>
-                                </Col>
-                            ))}
-                        </Row>
+                        <Spin spinning={loadingSummary}>
+                            <Row gutter={[24, 24]}>
+                                {stats.map((s, i) => (
+                                    <Col xs={24} sm={12} md={6} key={i}>
+                                        <Card style={styles.statCard} bodyStyle={{ padding: 20, position: 'relative' }}>
+                                            <div style={styles.cardIconWrapper}>
+                                                {React.cloneElement(s.icon, { style: styles.cardIcon })}
+                                            </div>
+                                            <Title level={3} style={styles.statValue}>{s.value}</Title>
+                                            <Text style={styles.statLabel}>{s.label}</Text>
+                                        </Card>
+                                    </Col>
+                                ))}
+                            </Row>
+                        </Spin>
 
-                        {/* Approval Chart (7 Hari Terakhir) */}
+                        {/* Approval Chart */}
                         <Row gutter={[24, 24]} style={{ marginTop: 24 }}>
                             <Col xs={24} lg={16}>
-                                <Card
-                                    title="Approval Chart (7 Hari Terakhir)"
-                                    style={styles.chartCard}
-                                    headStyle={styles.cardHead}
-                                    bodyStyle={{ minHeight: 260 }}
-                                >
+                                <Card title="Approval Chart (7 Hari Terakhir)"
+                                    style={styles.chartCard} headStyle={styles.cardHead}
+                                    bodyStyle={{ minHeight: 260 }}>
                                     <Spin spinning={loadingChart}>
-                                        <Chart
-                                            options={areaOptions}
-                                            series={series}
-                                            type="area"
-                                            height={260}
-                                        />
+                                        <Chart options={areaOptions} series={series} type="area" height={260} />
                                     </Spin>
                                 </Card>
                             </Col>
                             <Col xs={24} lg={8}>
-                                <Card
-                                    title="Persentase Asset Layak"
-                                    style={styles.chartCard}
-                                    headStyle={styles.cardHead}
-                                    bodyStyle={{ textAlign: 'center', minHeight: 260, paddingTop: 40 }}
-                                >
+                                <Card title="Persentase Asset Layak"
+                                    style={styles.chartCard} headStyle={styles.cardHead}
+                                    bodyStyle={{ textAlign: 'center', minHeight: 260, paddingTop: 40 }}>
                                     {loadingAssets ? (
                                         <Spin />
                                     ) : (
                                         <>
                                             <Chart
                                                 options={radialOptions}
-                                                series={radialSeries}
+                                                series={[summary ? summary.ratio_asset_layak * 100 : 0]}
                                                 type="radialBar"
                                                 height={200}
                                             />
-                                            <Text style={{ display: 'block', marginTop: 16 }}>
-                                                {layakJumlah} dari {totalJumlah} unit
+                                            <Text style={{ marginTop: 16 }}>
+                                                {summary
+                                                    ? `${summary.total_asset_layak} dari ${summary.total_asset} unit`
+                                                    : '-'}
                                             </Text>
                                         </>
                                     )}
@@ -297,21 +302,14 @@ const Dashboard: React.FC = () => {
                         {/* Recent Pelaporan */}
                         <Row gutter={[24, 24]} style={{ marginTop: 24, marginBottom: 24 }}>
                             <Col xs={24} md={12}>
-                                <Card
-                                    title={
-                                        <div style={styles.activitiesHeader}>
-                                            <span>Recent Pelaporan</span>
-                                            <Link to="/approval-pelaporan">View All</Link>
-                                        </div>
-                                    }
-                                    style={styles.chartCard}
-                                    headStyle={styles.cardHead}
-                                    bodyStyle={{ padding: 10 }}
-                                >
-                                    <List
-                                        itemLayout="horizontal"
-                                        dataSource={recentActivities}
-                                        split={false}
+                                <Card title={
+                                    <div style={styles.activitiesHeader}>
+                                        <span>Recent Pelaporan</span>
+                                        <Link to="/approval-pelaporan">View All</Link>
+                                    </div>}
+                                    style={styles.chartCard} headStyle={styles.cardHead}
+                                    bodyStyle={{ padding: 10 }}>
+                                    <List itemLayout="horizontal" dataSource={recentActivities} split={false}
                                         renderItem={item => (
                                             <List.Item style={styles.listItem}>
                                                 <List.Item.Meta
@@ -319,19 +317,16 @@ const Dashboard: React.FC = () => {
                                                     description={<Text type="secondary">{item.date}</Text>}
                                                 />
                                             </List.Item>
-                                        )}
-                                    />
+                                        )} />
                                 </Card>
                             </Col>
                             <Col xs={24} md={12}>
-                                <Card
-                                    title="Monthly Active Users"
-                                    style={styles.chartCard}
-                                    headStyle={styles.cardHead}
-                                    bodyStyle={{ minHeight: 240 }}
-                                />
+                                <Card title="Monthly Active Users"
+                                    style={styles.chartCard} headStyle={styles.cardHead}
+                                    bodyStyle={{ minHeight: 240 }} />
                             </Col>
                         </Row>
+
                     </div>
                 </Content>
             </Layout>

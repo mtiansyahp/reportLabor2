@@ -19,6 +19,7 @@ import {
     EyeOutlined,
     DeleteOutlined,
     CloseOutlined,
+    FilePdfOutlined,
 } from '@ant-design/icons';
 import DataTable, { TableColumn } from 'react-data-table-component';
 import Sidebar from '../component/sidebar/Sidebar';
@@ -196,10 +197,12 @@ export default function ApprovalPelaporan() {
                             setIsViewModalVisible(true);
                         }}
                     />
-                    <Button type="link" onClick={() => generatePDF(row.fullData)}>
+                    <Button
+                        type="link"
+                        icon={<FilePdfOutlined />}
+                        onClick={() => generatePDF(row.fullData)}
+                    />
 
-                        Unduh PDF
-                    </Button>
                     <DeleteOutlined
                         style={{ cursor: 'pointer', color: 'red' }}
                         onClick={() => {
