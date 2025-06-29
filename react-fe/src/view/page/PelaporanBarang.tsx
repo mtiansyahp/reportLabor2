@@ -26,32 +26,32 @@ const { TextArea } = Input;
 
 interface Asset {
     id: string;
-    nama: string;
-    manufaktur: string;
-    jumlah: number;
-    status: string;
-    umur: string;
-    riwayat: string;
-    created_at: string;
+    nama: string; // nama barang
+    manufaktur: string; // nama manufaktur
+    jumlah: number; // gausah karena dari asset sudah ada
+    status: string; // ini tidak diisi karena, pertama buat itu lagsung keisi belum di approve
+    umur: string; // umur sudah ada di asset
+    riwayat: string; // riwayat adalah : nilai kelayakan barang yang ada di frontend
+    created_at: string; // karena created itu sudah default disii dengan tanggal sekarang
 }
 
 export default function PelaporanBarang() {
-    const [data, setData] = useState<Asset[]>([]);
+    const [data, setData] = useState<Asset[]>([]); // ini untuk menyimpan data asset yang diambil dari API
     const [totalRows, setTotalRows] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [loading, setLoading] = useState(false);
-    const perPage = 100;
+    const perPage = 100; // ini buat menampilkan data per halaman
 
-    const [category, setCategory] = useState<string>();
-    const [item, setItem] = useState<string>();
-    const [riwayat, setRiwayat] = useState<string>();
-    const [kelayakan, setKelayakan] = useState<number | null>(null);
-    const [catatan, setCatatan] = useState<string>('');
-    const [fileList, setFileList] = useState<UploadFile[]>([]);
+    const [category, setCategory] = useState<string>();    // category adalah manufaktur yang dipilih oleh user, misal: acer, asus, lenovo, dll
+    const [item, setItem] = useState<string>(); // item adalah nama barang yang dipilih oleh user, misal: laptop, printer, dll
+    const [riwayat, setRiwayat] = useState<string>(); // riwayat adalah riwayat rusak barang yang diinputkan oleh user, bisa sangat sering, pernah, tidak sering, atau tidak pernah
+    const [kelayakan, setKelayakan] = useState<number | null>(null); // kelayakan adalah nilai kelayakan barang yang diinputkan oleh user, bisa 1-100 persen
+    const [catatan, setCatatan] = useState<string>(''); // catatan adalah catatan yang diinputkan oleh user, bisa kosong atau diisi
+    const [fileList, setFileList] = useState<UploadFile[]>([]); // fileList untuk menyimpan daftar file yang diupload (gambar evidence)
 
-    const [previewVisible, setPreviewVisible] = useState(false);
-    const [previewImage, setPreviewImage] = useState<string>('');
-    const [previewTitle, setPreviewTitle] = useState<string>('');
+    const [previewVisible, setPreviewVisible] = useState(false); // untuk mengontrol visibilitas modal preview gambar (untuk zoom atau melihat preview)
+    const [previewImage, setPreviewImage] = useState<string>(''); // untuk menyimpan URL gambar yang akan ditampilkan di modal preview
+    const [previewTitle, setPreviewTitle] = useState<string>(''); 
 
     const [submitting, setSubmitting] = useState(false);
 
@@ -104,11 +104,11 @@ export default function PelaporanBarang() {
     const manufakturs = useMemo(
         () => Array.from(new Set(data.map(a => a.manufaktur))),
         [data]
-    );
+    ); // ini untuk mendapatkan daftar manufaktur unik dari data asset
     const filteredItems = useMemo(
         () => data.filter(a => a.manufaktur === category),
         [data, category]
-    );
+    ); // ini untuk mendapatkan daftar barang yang sesuai dengan manufaktur yang dipilih
 
     const getBase64 = (file: Blob): Promise<string> =>
         new Promise((resolve, reject) => {
@@ -117,10 +117,11 @@ export default function PelaporanBarang() {
             reader.onload = () => resolve(reader.result as string);
             reader.onerror = err => reject(err);
         });
-
+       
     const handleUploadChange = ({ fileList }: UploadChangeParam<UploadFile>) => {
         setFileList(fileList);
     };
+    // fungsi ini untuk menangani perubahan pada daftar file yang diupload
 
     const handlePreview = async (file: UploadFile) => {
         if (!file.url && !file.preview) {
@@ -130,10 +131,12 @@ export default function PelaporanBarang() {
         setPreviewTitle(file.name || 'Preview');
         setPreviewVisible(true);
     };
+    // fungsi ini untuk menangani preview gambar ketika user mengklik gambar di daftar upload
 
     const handleCancel = () => setPreviewVisible(false);
+    // fungsi ini untuk menutup modal preview gambar
 
-    const onFinish = async () => {
+    const onFinish = async () => { // fungsi ini untuk menangani submit form pelaporan barang
         // if (fileList.length === 0) {
         //     message.error('Mohon unggah minimal satu foto evidence.');
         //     return;
@@ -144,17 +147,19 @@ export default function PelaporanBarang() {
         const selectedAsset = data.find(
             a => a.nama === item && a.manufaktur === category
         );
+        // cari asset yang sesuai dengan nama barang dan manufaktur yang dipilih
         if (!selectedAsset) {
             message.error('Barang tidak ditemukan');
             setSubmitting(false);
             return;
         }
+        // jika tidak ditemukan, tampilkan pesan error
 
-        const evidenceList = (fileList && fileList.length > 0)
+        const evidenceList = (fileList && fileList.length > 0) // satu fungsi ini untuk mengisi data tb evidence yang udah diisi di frontend ke backend/ database
             ? fileList.map(f => ({
-                name: f.name,
-                url: f.url || f.thumbUrl || null,
-                user_maker: userName,
+                name: f.name, // nama file yang diupload
+                url: f.url || f.thumbUrl || null, // URL file yang diupload, jika ada
+                user_maker: userName, // nama user yang membuat laporan
                 status_approve: 'menunggu approve',
                 approval_sequence: userRole === 'pegawai' ? 1 : 0,
                 created_at: new Date().toISOString(),
@@ -176,10 +181,10 @@ export default function PelaporanBarang() {
             kelayakan,
             catatan,
             evidence: evidenceList,
-        };
+        }; // untuk mengisi data approval yang akan dikirim ke backend
 
         try {
-            await api.post('/approval-pelaporan', approvalPayload);
+            await api.post('/approval-pelaporan', approvalPayload); // kirim data approval ke backend
             Modal.success({
                 title: 'Berhasil',
                 content: 'Laporan berhasil dikirim.',

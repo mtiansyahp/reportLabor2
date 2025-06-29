@@ -214,6 +214,8 @@ const Dashboard: React.FC = () => {
             }));
     }, [approvalData]);
 
+    // saya menggunakan antd design dan apex chart dimana sudah bawaan dari library nya jadi saya tinggal masukin data dari api /summary /equiment
+
     // stats cards, driven by summary
     const stats = [
         {
