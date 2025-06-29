@@ -16,34 +16,34 @@ const { Search } = Input;
 const { Title, Text } = Typography;
 const { Option } = Select;
 
-interface User {
-    id: number;
-    name: string;
-    email: string;
-    role: string;
-    is_active: boolean;
+interface User { // untuk mendefinisikan tipe data User
+    id: number; // ID unik untuk user
+    name: string; // Nama lengkap user
+    email: string; // Alamat email user
+    role: string; // Peran user (admin, pegawai, atasan)
+    is_active: boolean; // Status aktif/inaktif user
 }
 export default function ManajemenUser() {
-    const [data, setData] = useState<User[]>([]);
-    const [filterText, setFilterText] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-    const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-    const [isViewModalVisible, setIsViewModalVisible] = useState(false);
-    const [selectedUser, setSelectedUser] = useState<User | null>(null);
-    const [form] = Form.useForm();
-    const fetchedRef = useRef(false);
+    const [data, setData] = useState<User[]>([]); // State untuk menyimpan data user
+    const [filterText, setFilterText] = useState(''); // State untuk menyimpan teks filter
+    const [loading, setLoading] = useState(false); // State untuk mengatur status loading
+    const [isAddModalVisible, setIsAddModalVisible] = useState(false); // State untuk mengatur visibilitas modal tambah user
+    const [isEditModalVisible, setIsEditModalVisible] = useState(false); // State untuk mengatur visibilitas modal edit user
+    const [isViewModalVisible, setIsViewModalVisible] = useState(false); // State untuk mengatur visibilitas modal lihat detail user
+    const [selectedUser, setSelectedUser] = useState<User | null>(null); // State untuk menyimpan user yang dipilih
+    const [form] = Form.useForm(); // Form instance untuk menangani form input
+    const fetchedRef = useRef(false); // Ref untuk memastikan data hanya di-fetch sekali
 
-    const fetchUsers = async () => {
+    const fetchUsers = async () => { // Fungsi untuk mengambil data user dari API
         setLoading(true);
         try {
-            const res = await api.get('/users');
-            const users: User[] = res.data.data.map((u: any) => ({
-                id: u.id,
-                name: u.name,
-                email: u.email,
-                role: u.role,
-                is_active: u.is_active,
+            const res = await api.get('/users'); // Mengambil data user dari endpoint API
+            const users: User[] = res.data.data.map((u: any) => ({ // Mengonversi data yang diterima menjadi tipe User
+                id: u.id, // ID unik user
+                name: u.name, // Nama lengkap user
+                email: u.email, // Alamat email user
+                role: u.role, // Peran user (admin, pegawai, atasan)
+                is_active: u.is_active, // Status aktif/inaktif user
             }));
             setData(users);
         } catch (err) {
@@ -54,44 +54,44 @@ export default function ManajemenUser() {
         }
     };
 
-    useEffect(() => {
+    useEffect(() => { // Hook untuk mengambil data user saat komponen pertama kali dimuat
         if (!fetchedRef.current) {
             fetchedRef.current = true;
             fetchUsers();
         }
     }, []);
-    const openAddModal = () => {
+    const openAddModal = () => { // Fungsi untuk membuka modal tambah user
         form.resetFields();
         setIsAddModalVisible(true);
     };
 
-    const handleAdd = async () => {
+    const handleAdd = async () => { // Fungsi untuk menangani penambahan user baru
         try {
             const values = await form.validateFields();
-            await api.post('/users', {
-                name: values.name,
-                email: values.email,
-                role: values.role,
-                is_active: values.is_active ? 1 : 0,
+            await api.post('/users', { // Mengirim data user baru ke endpoint API
+                name: values.name, // Nama lengkap user
+                email: values.email, // Alamat email user
+                role: values.role, // Peran user (admin, pegawai, atasan)
+                is_active: values.is_active ? 1 : 0, // Status aktif/inaktif user
             });
-            message.success('User ditambahkan');
-            setIsAddModalVisible(false);
-            fetchUsers();
+            message.success('User ditambahkan'); // Menampilkan pesan sukses
+            setIsAddModalVisible(false); // Menutup
+            fetchUsers(); // Memuat ulang data user
         } catch (err) {
             console.error(err);
-            message.error('Gagal menambah user');
+            message.error('Gagal menambah user'); // Menampilkan pesan error jika terjadi kesalahan
         }
     };
 
-    const handleEdit = async () => {
+    const handleEdit = async () => { // Fungsi untuk menangani pembaruan data user
         if (!selectedUser) return;
         try {
-            const values = await form.validateFields();
-            await api.put(`/users/${selectedUser.id}`, {
-                name: values.name,
-                email: values.email,
-                role: values.role,
-                is_active: values.is_active ? 1 : 0,
+            const values = await form.validateFields(); // Memvalidasi form input
+            await api.put(`/users/${selectedUser.id}`, { // Mengirim data user yang diperbarui ke endpoint API
+                name: values.name, // Nama lengkap user
+                email: values.email, // Alamat email user
+                role: values.role, // Peran user (admin, pegawai, atasan)
+                is_active: values.is_active ? 1 : 0, // Status aktif/inaktif user
             });
             message.success('User diperbarui');
             setIsEditModalVisible(false);
@@ -101,38 +101,38 @@ export default function ManajemenUser() {
             message.error('Gagal memperbarui user');
         }
     };
-    const filteredData = useMemo(
+    const filteredData = useMemo( // Menggunakan useMemo untuk mengoptimalkan filter data
         () =>
             data.filter(u =>
-                u.name.toLowerCase().includes(filterText.toLowerCase()) ||
-                u.email.toLowerCase().includes(filterText.toLowerCase())
+                u.name.toLowerCase().includes(filterText.toLowerCase()) || // Memfilter berdasarkan nama
+                u.email.toLowerCase().includes(filterText.toLowerCase()) // atau email
             ),
-        [data, filterText]
+        [data, filterText] // Dependensi untuk useMemo
     );
 
-    const columns: TableColumn<User>[] = [
-        { name: 'Nama', selector: r => r.name, sortable: true },
-        { name: 'Email', selector: r => r.email, sortable: true },
+    const columns: TableColumn<User>[] = [ // Mendefinisikan kolom untuk DataTable
+        { name: 'Nama', selector: r => r.name, sortable: true }, // Kolom untuk nama user
+        { name: 'Email', selector: r => r.email, sortable: true }, // Kolom untuk email user
         {
-            name: 'Roles',
-            selector: r => r.role,
-            sortable: true,
-            cell: r => <Text>{r.role}</Text>,
+            name: 'Roles', // Kolom untuk peran user
+            selector: r => r.role, // Mengambil nilai peran dari user
+            sortable: true, // Mengizinkan pengurutan berdasarkan peran
+            cell: r => <Text>{r.role}</Text>, // Menampilkan peran sebagai teks
         },
         {
-            name: 'Active',
-            selector: r => r.is_active,
-            sortable: true,
-            cell: r => (
-                <Tag color={r.is_active ? 'green' : 'red'}>
+            name: 'Active', // Kolom untuk status aktif/inaktif user
+            selector: r => r.is_active, //  Mengambil nilai status aktif dari user
+            sortable: true, // Mengizinkan pengurutan berdasarkan status aktif
+            cell: r => ( // Menampilkan status aktif sebagai Tag
+                <Tag color={r.is_active ? 'green' : 'red'}> 
                     {r.is_active ? 'Active' : 'Inactive'}
-                </Tag>
+                </Tag> // untuk menandai status aktif atau inaktif
             ),
         },
         {
-            name: 'Action',
-            cell: r => (
-                <Space size="middle">
+            name: 'Action', // Kolom untuk tindakan yang dapat dilakukan pada user
+            cell: r => ( // Menampilkan ikon untuk melihat, mengedit, dan menghapus user
+                <Space size="middle"> 
                     <EyeOutlined onClick={() => { setSelectedUser(r); setIsViewModalVisible(true); }} />
                     <EditOutlined onClick={() => {
                         setSelectedUser(r);
@@ -143,32 +143,32 @@ export default function ManajemenUser() {
                             is_active: r.is_active,
                         });
                         setIsEditModalVisible(true);
-                    }} />
-                    <DeleteOutlined style={{ color: 'red' }} onClick={() => {
-                        Modal.confirm({
+                    }} />   
+                    <DeleteOutlined style={{ color: 'red' }} onClick={() => { // Menangani penghapusan user
+                        Modal.confirm({ // Menampilkan konfirmasi sebelum menghapus user
                             title: 'Hapus User',
                             content: `Yakin ingin menghapus "${r.name}"?`,
-                            onOk: async () => {
+                            onOk: async () => { // Jika pengguna mengonfirmasi penghapusan
                                 try {
-                                    await api.delete(`/users/${r.id}`);
-                                    message.success('User dihapus');
-                                    fetchUsers();
-                                } catch (e) {
-                                    console.error(e);
-                                    message.error('Gagal menghapus user');
+                                    await api.delete(`/users/${r.id}`); // Mengirim permintaan penghapusan user ke endpoint API
+                                    message.success('User dihapus'); // Menampilkan pesan sukses
+                                    fetchUsers(); // Memuat ulang data user
+                                } catch (e) { // Menangani kesalahan saat menghapus user
+                                    console.error(e); // Menampilkan pesan error di konsol
+                                    message.error('Gagal menghapus user'); // Menampilkan pesan error
                                 }
                             }
                         });
                     }} />
-                </Space>
+                </Space>// Menampilkan ikon untuk melihat, mengedit, dan menghapus user
             ),
-            ignoreRowClick: true,
-            allowOverflow: true,
-            button: true,
+            ignoreRowClick: true, // Mengabaikan klik pada baris untuk kolom ini
+            allowOverflow: true, // Mengizinkan overflow pada kolom ini
+            button: true, // Mengizinkan tombol pada kolom ini
         },
     ];
-    return (
-        <Layout style={styles.root}>
+    return ( // Komponen utama Manajemen User
+        <Layout style={styles.root}> 
             <Sidebar />
             <Layout style={styles.main}>
                 <Navbar />
@@ -243,7 +243,7 @@ export default function ManajemenUser() {
                     </Modal>
 
                     {/* Edit Modal */}
-                    <Modal
+                    <Modal // Modal untuk mengedit user
                         title="Edit User"
                         open={isEditModalVisible}
                         onCancel={() => setIsEditModalVisible(false)}
@@ -277,7 +277,7 @@ export default function ManajemenUser() {
                     </Modal>
 
                     {/* View Modal */}
-                    <Modal
+                    <Modal // Modal untuk melihat detail user
                         open={isViewModalVisible}
                         footer={null}
                         closable={false}
@@ -322,7 +322,7 @@ export default function ManajemenUser() {
         </Layout>
     );
 }
-const styles: { [key: string]: React.CSSProperties } = {
+const styles: { [key: string]: React.CSSProperties } = { // Styles untuk komponen Manajemen User
     root: { minHeight: '100vh', overflowX: 'hidden' },
     main: { marginLeft: 200 },
     content: { background: '#ECF2FF', padding: 24, overflowY: 'auto' },

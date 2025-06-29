@@ -21,19 +21,19 @@ import {
     PlusOutlined,
     CloseOutlined,
 } from '@ant-design/icons';
-import { DatePicker } from 'antd';
-import DataTable, { TableColumn } from 'react-data-table-component';
-import Sidebar from '../component/sidebar/Sidebar';
+import { DatePicker } from 'antd'; // Import DatePicker dari antd
+import DataTable, { TableColumn } from 'react-data-table-component'; // Komponen DataTable untuk menampilkan tabel
+import Sidebar from '../component/sidebar/Sidebar'; // import Sidebar component
 import Navbar from '../component/navbar/Navbar';
 
 import { api } from '../../api/apiAxios';  // ← gunakan axios instance dengan bearer token
 
-const { Content } = Layout;
-const { Search } = Input;
-const { Title, Text } = Typography;
-const { Option } = Select;
+const { Content } = Layout; // Layout komponen utama
+const { Search } = Input; // Komponen pencarian dari antd
+const { Title, Text } = Typography; // Typography untuk teks dan judul
+const { Option } = Select; // Pilihan untuk Select
 
-interface Asset {
+interface Asset { // Definisi tipe data untuk aset
     id: string;
     nama: string;
     manufaktur: string;
@@ -45,31 +45,31 @@ interface Asset {
 }
 
 
-type AssetForm = Omit<Asset, 'id'>;
+type AssetForm = Omit<Asset, 'id'>; // Tipe data untuk form aset, menghilangkan 'id' karena tidak perlu diinputkan
 
-export default function ManajemenAset() {
-    const [data, setData] = useState<Asset[]>([]);
-    const fetchedRef = useRef(false);
-    const [filterText, setFilterText] = useState('');
-    const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-    const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-    const [isViewModalVisible, setIsViewModalVisible] = useState(false);
-    const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [totalRows, setTotalRows] = useState(0);
-    const [perPage] = useState(10);
-    const [loading, setLoading] = useState(false);
+export default function ManajemenAset() { // Komponen utama Manajemen Aset
+    const [data, setData] = useState<Asset[]>([]); // Daftar aset yang akan ditampilkan
+    const fetchedRef = useRef(false); // Menandai apakah data sudah diambil dari API
+    const [filterText, setFilterText] = useState(''); // Teks filter untuk pencarian aset
+    const [isAddModalVisible, setIsAddModalVisible] = useState(false); // Status modal untuk menambah aset
+    const [isEditModalVisible, setIsEditModalVisible] = useState(false); // Status modal untuk mengedit aset
+    const [isViewModalVisible, setIsViewModalVisible] = useState(false); // Status modal untuk melihat detail aset
+    const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null); // Aset yang dipilih untuk dilihat atau diedit
+    const [currentPage, setCurrentPage] = useState(1); // Halaman saat ini untuk pagination
+    const [totalRows, setTotalRows] = useState(0); // Total baris data untuk pagination
+    const [perPage] = useState(10); // Jumlah item per halaman untuk pagination
+    const [loading, setLoading] = useState(false); // Status loading saat mengambil data dari API
 
-    const [resultModal, setResultModal] = useState({
-        visible: false,
-        success: true,
+    const [resultModal, setResultModal] = useState({ // Status modal hasil operasi
+        visible: false, // Menandai apakah modal hasil operasi terlihat
+        success: true, // Status sukses atau gagal operasi
         message: '',
     });
 
     // const [filterText, setFilterText] = useState('');
 
 
-    const [form] = Form.useForm<Asset>();
+    const [form] = Form.useForm<Asset>(); // Form untuk menambah atau mengedit aset
 
     // Ambil data dari API Laravel pada mount
     useEffect(() => {
@@ -77,11 +77,11 @@ export default function ManajemenAset() {
             fetchAssets(currentPage, filterText);
         }, 300); // Debounce 300ms untuk pencarian
 
-        return () => clearTimeout(timeout);
-    }, [currentPage, filterText]);
+        return () => clearTimeout(timeout); // Bersihkan timeout saat komponen unmount atau filterText berubah
+    }, [currentPage, filterText]); // Mengambil data saat currentPage atau filterText berubah
 
-    const handlePageChange = (page: number) => {
-        fetchAssets(page, filterText);
+    const handlePageChange = (page: number) => { // Fungsi untuk menangani perubahan halaman pada pagination
+        fetchAssets(page, filterText); // Ambil data aset berdasarkan halaman yang dipilih
     };
 
     // useEffect(() => {
@@ -95,32 +95,32 @@ export default function ManajemenAset() {
 
 
 
-    const fetchAssets = async (page = 1, search = '') => {
-        setLoading(true);
+    const fetchAssets = async (page = 1, search = '') => { // Fungsi untuk mengambil data aset dari API
+        setLoading(true); // Menandai loading saat mengambil data
         try {
-            const res = await api.get(`/equipment`, {
-                params: {
+            const res = await api.get(`/equipment`, { // Menggunakan axios instance yang sudah diatur dengan token
+                params: { // Parameter untuk API
                     page,
                     per_page: perPage,
                     search,
                 },
             });
 
-            const list = res.data.data;
-            const assets: Asset[] = list.map((e: { unique_id: any; nama_item: any; manufaktur: any; quantity: any; kondisi_barang: any; umur: any; created_at: any; }) => ({
-                id: e.unique_id,
-                nama: e.nama_item,
-                manufaktur: e.manufaktur,
-                jumlah: e.quantity ?? 0,
-                status: e.kondisi_barang,
-                umur: e.umur,
-                riwayat: `${e.umur} tahun`,
-                created_at: e.created_at,
+            const list = res.data.data; // Daftar aset yang diambil dari API
+            const assets: Asset[] = list.map((e: { unique_id: any; nama_item: any; manufaktur: any; quantity: any; kondisi_barang: any; umur: any; created_at: any; }) => ({ // Mapping data dari API ke tipe Asset
+                id: e.unique_id, // Menggunakan unique_id sebagai ID
+                nama: e.nama_item, // Nama item dari API
+                manufaktur: e.manufaktur, // Manufaktur dari API
+                jumlah: e.quantity ?? 0, // Jumlah item, default 0 jika tidak ada
+                status: e.kondisi_barang, // Status barang dari API
+                umur: e.umur, // Umur barang dari API
+                riwayat: `${e.umur} tahun`, // Riwayat umur barang
+                created_at: e.created_at, // Tanggal dibuat dari API
             }));
 
-            setData(assets);
-            setTotalRows(res.data.meta.total);
-            setCurrentPage(page);
+            setData(assets); // Set data aset yang diambil dari API
+            setTotalRows(res.data.meta.total); // Set total baris data untuk pagination
+            setCurrentPage(page); // Set halaman saat ini
         } catch (err) {
             console.error(err);
             message.error('Gagal memuat data equipment');
@@ -129,60 +129,60 @@ export default function ManajemenAset() {
         }
     };
 
-    const filteredData = useMemo(
+    const filteredData = useMemo( // Menggunakan useMemo untuk mengoptimalkan filter data
         () =>
-            data.filter(asset =>
-                asset.nama.toLowerCase().includes(filterText.toLowerCase())
+            data.filter(asset => // Memfilter data berdasarkan teks pencarian
+                asset.nama.toLowerCase().includes(filterText.toLowerCase()) //  Mencocokkan nama aset dengan teks pencarian
             ),
-        [data, filterText]
+        [data, filterText] // Dependensi useMemo, akan dihitung ulang jika data atau filterText berubah
     );
 
-    const columns: TableColumn<Asset>[] = [
-        { name: 'Nama Barang', selector: row => row.nama, sortable: true },
+    const columns: TableColumn<Asset>[] = [ // Definisi kolom untuk DataTable
+        { name: 'Nama Barang', selector: row => row.nama, sortable: true }, // Nama barang, dapat diurutkan
         {
-            name: 'Manufaktur',
-            selector: row => row.manufaktur,
-            sortable: true,
-            right: true,
+            name: 'Manufaktur', // Manufaktur, dapat diurutkan
+            selector: row => row.manufaktur, // Mengambil manufaktur dari aset
+            sortable: true, // Dapat diurutkan
+            right: true, // Penempatan teks di kanan
         },
         {
-            name: 'Jumlah',
-            selector: row => row.jumlah,
-            sortable: true,
-            right: true,
+            name: 'Jumlah', // Jumlah barang, dapat diurutkan
+            selector: row => row.jumlah, // Mengambil jumlah dari aset
+            sortable: true, // Dapat diurutkan
+            right: true, // Penempatan teks di kanan
         },
         {
-            name: 'Status',
-            selector: row => row.status,
-            cell: row => (
+            name: 'Status', // Status barang, dapat diurutkan
+            selector: row => row.status, // Mengambil status dari aset
+            cell: row => ( // Menampilkan status dengan tag berwarna
                 <Tag color={row.status === 'Baik' ? 'green' : 'red'}>
                     {row.status}
-                </Tag>
+                </Tag> // Menggunakan tag untuk menampilkan status
             ),
             sortable: true,
         },
         {
-            name: 'Umur',
-            selector: row => `${row.umur} Bulan`,
+            name: 'Umur', // Umur barang dalam bulan, dapat diurutkan
+            selector: row => `${row.umur} Bulan`, // Mengambil umur dari aset dan menampilkannya dalam format "X Bulan"
             sortable: true
         },
         {
-            name: 'Created At',
-            selector: (row) => new Date(row.created_at).toLocaleDateString()
+            name: 'Created At', // Tanggal dibuat, tidak dapat diurutkan
+            selector: (row) => new Date(row.created_at).toLocaleDateString() // Mengambil tanggal dibuat dan mengubahnya ke format lokal
 
         },
         {
-            name: 'Action',
-            cell: row => (
-                <Space size="middle">
+            name: 'Action', // Aksi untuk setiap baris, tidak dapat diurutkan
+            cell: row => ( // Menampilkan ikon aksi untuk setiap baris
+                <Space size="middle"> 
                     <EyeOutlined
                         style={{ cursor: 'pointer' }}
                         onClick={() => {
-                            setSelectedAsset(row);
-                            setIsViewModalVisible(true);
+                            setSelectedAsset(row); // Set aset yang dipilih untuk dilihat
+                            setIsViewModalVisible(true); // Tampilkan modal untuk melihat detail aset
                         }}
                     />
-                    <EditOutlined
+                    <EditOutlined // Ikon untuk mengedit aset
                         style={{ cursor: 'pointer' }}
                         onClick={() => {
                             setSelectedAsset(row);
@@ -193,24 +193,24 @@ export default function ManajemenAset() {
                                 status: row.status,
                                 umur: row.umur,
                                 created_at: row.created_at,
-                            });
+                            }); // Set nilai form dengan data aset yang dipilih
 
 
-                            setIsEditModalVisible(true);
+                            setIsEditModalVisible(true); // Tampilkan modal untuk mengedit aset
                         }}
                     />
-                    <DeleteOutlined
-                        style={{ cursor: 'pointer', color: 'red' }}
-                        onClick={() => {
-                            Modal.confirm({
+                    <DeleteOutlined // Ikon untuk menghapus aset
+                        style={{ cursor: 'pointer', color: 'red' }} // Menggunakan warna merah untuk ikon hapus
+                        onClick={() => { // Fungsi untuk menghapus aset
+                            Modal.confirm({ // Konfirmasi sebelum menghapus
                                 title: 'Hapus Item',
                                 content: `Yakin ingin menghapus "${row.nama}"?`,
-                                onOk: async () => {
-                                    try {
+                                onOk: async () => { // Jika pengguna mengkonfirmasi
+                                    try { // Mengirim permintaan DELETE ke API untuk menghapus aset
                                         await api.delete(`/equipment/${row.id}`);
                                         setData(prev => prev.filter(a => a.id !== row.id));
                                         message.success('Item dihapus');
-                                    } catch (err) {
+                                    } catch (err) { // Menangani kesalahan saat menghapus
                                         message.error('Gagal menghapus item');
                                         console.error(err);
                                     }
@@ -227,27 +227,27 @@ export default function ManajemenAset() {
         },
     ];
 
-    const openAddModal = () => {
-        form.resetFields();
-        setIsAddModalVisible(true);
+    const openAddModal = () => { // Fungsi untuk membuka modal tambah aset
+        form.resetFields(); // Mengatur ulang form sebelum membuka modal
+        setIsAddModalVisible(true); // Menampilkan modal tambah aset
     };
 
-    const handleAdd = async () => {
-        try {
-            const values = await form.validateFields() as AssetForm;
+    const handleAdd = async () => { // Fungsi untuk menangani penambahan aset
+        try { // Validasi form sebelum mengirim data
+            const values = await form.validateFields() as AssetForm; // Mengambil nilai dari form dan mengasumsikan tipe AssetForm
 
-            const response = await api.post('/equipment', {
+            const response = await api.post('/equipment', { // Mengirim permintaan POST ke API untuk menambahkan aset
                 nama_item: values.nama,
                 manufaktur: values.manufaktur,
                 quantity: values.jumlah,
                 kondisi_barang: values.status,
                 umur: values.umur,
                 created_at: values.created_at, // kirim manual tanggal buat
-            });
+            }); // ← menggunakan axios instance yang sudah diatur dengan token
 
-            const item = response.data.data;
+            const item = response.data.data; // Data aset yang baru ditambahkan dari respons API
 
-            const newAsset: Asset = {
+            const newAsset: Asset = { // Membuat objek aset baru dengan data yang diterima dari API
                 id: item.unique_id,
                 nama: item.nama_item,
                 manufaktur: item.manufaktur,
@@ -256,10 +256,10 @@ export default function ManajemenAset() {
                 umur: item.umur,
                 riwayat: `${item.umur} tahun`,
                 created_at: item.created_at,
-            };
+            }; // Membuat objek aset baru dengan data yang diterima dari API
 
-            setData(prev => [newAsset, ...prev]);
-            setIsAddModalVisible(false);
+            setData(prev => [newAsset, ...prev]); // Menambahkan aset baru ke daftar aset yang ada
+            setIsAddModalVisible(false); // Menutup
             message.success('Item ditambahkan');
             showResultModal(true, 'Item berhasil ditambahkan');
         } catch (err) {
@@ -274,12 +274,12 @@ export default function ManajemenAset() {
 
 
 
-    const handleEdit = async () => {
+    const handleEdit = async () => { // Fungsi untuk menangani pengeditan aset
         try {
-            const values = await form.validateFields();
+            const values = await form.validateFields(); // Validasi form sebelum mengirim data
 
-            if (selectedAsset) {
-                await api.put(`/equipment/${selectedAsset.id}`, {
+            if (selectedAsset) { // Jika ada aset yang dipilih untuk diedit
+                await api.put(`/equipment/${selectedAsset.id}`, { // Mengirim permintaan PUT ke API untuk memperbarui aset
                     nama_item: values.nama,
                     manufaktur: values.manufaktur,
                     quantity: values.jumlah,
@@ -287,7 +287,7 @@ export default function ManajemenAset() {
                     umur: values.umur,
                 });
 
-                const updatedAsset: Asset = {
+                const updatedAsset: Asset = { // Membuat objek aset yang diperbarui
                     id: selectedAsset.id,
                     nama: values.nama,
                     manufaktur: values.manufaktur,
@@ -295,36 +295,36 @@ export default function ManajemenAset() {
                     status: values.status,
                     umur: values.umur,
                     riwayat: `${values.umur} tahun`,
-                    created_at: selectedAsset.created_at, // retain original
+                    created_at: selectedAsset.created_at, // retain original // created_at
                 };
 
-                setData(prev =>
+                setData(prev => // Memperbarui daftar aset dengan aset yang diperbarui
                     prev.map(a =>
-                        a.id === selectedAsset.id ? updatedAsset : a
+                        a.id === selectedAsset.id ? updatedAsset : a // Mengganti aset yang diperbarui dengan yang lama
                     )
                 );
 
-                setIsEditModalVisible(false);
-                message.success('Item diperbarui');
+                setIsEditModalVisible(false); // Menutup modal edit setelah berhasil memperbarui
+                message.success('Item diperbarui'); // Menampilkan pesan sukses
                 showResultModal(true, 'Item berhasil diperbarui');
             }
         } catch (err) {
-            showResultModal(false, 'Gagal memperbarui item');
+            showResultModal(false, 'Gagal memperbarui item'); // Menampilkan pesan gagal memperbarui
             message.error('Gagal memperbarui item');
             console.error(err);
         }
     };
 
-    const showResultModal = (success: boolean, messageText: string) => {
-        setResultModal({
-            visible: true,
-            success,
-            message: messageText,
+    const showResultModal = (success: boolean, messageText: string) => { // Fungsi untuk menampilkan modal hasil operasi
+        setResultModal({ // Mengatur status modal hasil operasi
+            visible: true, // Menandai modal hasil operasi terlihat
+            success, // Status sukses atau gagal operasi
+            message: messageText, // Pesan yang akan ditampilkan di modal
         });
     };
 
 
-    const handleViewCancel = () => setIsViewModalVisible(false);
+    const handleViewCancel = () => setIsViewModalVisible(false); // Fungsi untuk menutup modal lihat detail aset
 
     return (
         <Layout style={styles.root}>
@@ -355,41 +355,41 @@ export default function ManajemenAset() {
                             </Space>
                         }
                     >
-                        <DataTable
-                            columns={columns}
-                            data={data}
-                            pagination
-                            paginationServer
-                            paginationTotalRows={totalRows}
-                            onChangePage={handlePageChange}
-                            paginationPerPage={perPage}
-                            progressPending={loading}
-                            highlightOnHover
-                            pointerOnHover
-                            responsive
-                            noHeader
+                        <DataTable // Komponen DataTable untuk menampilkan daftar aset
+                            columns={columns} // Kolom yang akan ditampilkan di tabel
+                            data={data} // Data yang akan ditampilkan di tabel
+                            pagination // Mengaktifkan pagination
+                            paginationServer // Menggunakan server-side pagination
+                            paginationTotalRows={totalRows} // Total baris data untuk pagination
+                            onChangePage={handlePageChange} // Fungsi untuk menangani perubahan halaman
+                            paginationPerPage={perPage} // Jumlah item per halaman
+                            progressPending={loading} // Menampilkan indikator loading saat data sedang diambil
+                            highlightOnHover // Menyoroti baris saat hover
+                            pointerOnHover // Menampilkan kursor pointer saat hover
+                            responsive // Membuat tabel responsif
+                            noHeader // Menyembunyikan header tabel
                         />
 
-                    </Card>
+                    </Card> 
 
                     {/* Add Modal */}
-                    <Modal
-                        title="Tambah Item"
-                        visible={isAddModalVisible}
-                        onCancel={() => setIsAddModalVisible(false)}
-                        onOk={handleAdd}
-                        centered
+                    <Modal // Modal untuk menambah aset
+                        title="Tambah Item" // Judul modal
+                        visible={isAddModalVisible} // Status modal terlihat
+                        onCancel={() => setIsAddModalVisible(false)} // Fungsi untuk menutup modal
+                        onOk={handleAdd} // Fungsi untuk menangani penambahan aset
+                        centered // Menampilkan modal di tengah layar
                     >
-                        <Form form={form} layout="vertical">
-                            <Form.Item
+                        <Form form={form} layout="vertical"> // Form untuk menambah aset
+                            <Form.Item // Nama barang
                                 name="nama"
                                 label="Nama Barang"
                                 rules={[{ required: true, message: 'Masukkan nama barang' }]}
                             >
-                                <Input />
+                                <Input /> // Input untuk nama barang
                             </Form.Item>
 
-                            <Form.Item
+                            <Form.Item // Manufaktur
                                 name="manufaktur"
                                 label="Manufaktur"
                                 rules={[{ required: true, message: 'Masukkan nama manufaktur' }]}
@@ -397,86 +397,86 @@ export default function ManajemenAset() {
                                 <Input />
                             </Form.Item>
 
-                            <Form.Item
+                            <Form.Item // Jumlah barang
                                 name="jumlah"
                                 label="Jumlah"
-                                rules={[{ required: true, message: 'Masukkan jumlah' }]}
+                                rules={[{ required: true, message: 'Masukkan jumlah' }]} // Validasi untuk jumlah barang
                             >
-                                <InputNumber min={1} style={{ width: '100%' }} />
-                            </Form.Item>
+                                <InputNumber min={1} style={{ width: '100%' }} /> // Input untuk jumlah barang, minimal 1
+                            </Form.Item> 
 
-                            <Form.Item
+                            <Form.Item // Umur barang
                                 name="umur"
                                 label="Umur (bulan)"
-                                rules={[{ required: true, message: 'Masukkan umur barang' }]}
+                                rules={[{ required: true, message: 'Masukkan umur barang' }]} //    Validasi untuk umur barang
                             >
-                                <InputNumber min={1} style={{ width: '100%' }} />
+                                <InputNumber min={1} style={{ width: '100%' }} /> // Input untuk umur barang, minimal 1
                             </Form.Item>
 
-                            <Form.Item
+                            <Form.Item // Status barang
                                 name="status"
                                 label="Status"
-                                rules={[{ required: true, message: 'Pilih status barang' }]}
+                                rules={[{ required: true, message: 'Pilih status barang' }]} // Validasi untuk status barang
                             >
-                                <Select placeholder="Pilih status">
-                                    <Option value="Baik">Baik</Option>
-                                    <Option value="Rusak">Rusak</Option>
+                                <Select placeholder="Pilih status"> // Select untuk memilih status barang   
+                                    <Option value="Baik">Baik</Option> // Pilihan status "Baik"
+                                    <Option value="Rusak">Rusak</Option> // Pilihan status "Rusak"
                                 </Select>
                             </Form.Item>
-                            <Form.Item
+                            <Form.Item // Tanggal dibuat
                                 name="created"
                                 label="Tanggal Dibuat"
                                 rules={[{ required: true, message: 'Masukkan tanggal dibuat' }]}
                             >
-                                <DatePicker format="YYYY-MM-DD" style={{ width: '100%' }} />
+                                <DatePicker format="YYYY-MM-DD" style={{ width: '100%' }} /> // Input untuk tanggal dibuat, format YYYY-MM-DD
                             </Form.Item>
 
                         </Form>
-                    </Modal>
+                    </Modal> 
 
 
                     {/* Edit Modal */}
-                    <Modal
-                        title="Edit Item"
-                        visible={isEditModalVisible}
-                        onCancel={() => setIsEditModalVisible(false)}
-                        onOk={handleEdit}
-                        centered
+                    <Modal // Modal untuk mengedit aset
+                        title="Edit Item" // Judul modal
+                        visible={isEditModalVisible}        // Status modal terlihat
+                        onCancel={() => setIsEditModalVisible(false)} // Fungsi untuk menutup modal
+                        onOk={handleEdit} // Fungsi untuk menangani pengeditan aset
+                        centered // Menampilkan modal di tengah layar
                     >
-                        <Form form={form} layout="vertical">
-                            <Form.Item
+                        <Form form={form} layout="vertical"> // Form untuk mengedit aset
+                            <Form.Item // Nama barang
                                 name="nama"
                                 label="Nama Barang"
                                 rules={[{ required: true, message: 'Masukkan nama barang' }]}
                             >
-                                <Input />
+                                <Input /> // Input untuk nama barang
                             </Form.Item>
 
-                            <Form.Item
+                            <Form.Item // Manufaktur
                                 name="manufaktur"
                                 label="Manufaktur"
-                                rules={[{ required: true, message: 'Masukkan nama manufaktur' }]}
+                                rules={[{ required: true, message: 'Masukkan nama manufaktur' }]} // Validasi untuk manufaktur  
                             >
                                 <Input />
                             </Form.Item>
 
-                            <Form.Item
+                            <Form.Item // Jumlah barang
                                 name="jumlah"
                                 label="Jumlah"
                                 rules={[{ required: true, message: 'Masukkan jumlah' }]}
                             >
-                                <InputNumber min={1} style={{ width: '100%' }} />
+                                <InputNumber min={1} style={{ width: '100%' }} /> // Input untuk jumlah barang, minimal 1
                             </Form.Item>
 
-                            <Form.Item
+                            <Form.Item // Umur barang
                                 name="umur"
                                 label="Umur (bulan)"
-                                rules={[{ required: true, message: 'Masukkan umur barang' }]}
+                                rules={[{ required: true, message: 'Masukkan umur barang' }]} // Validasi untuk umur barang
                             >
-                                <InputNumber min={1} style={{ width: '100%' }} />
+                                <InputNumber min={1} style={{ width: '100%' }} /> // Input untuk umur barang, minimal 1
                             </Form.Item>
 
-                            <Form.Item
+                            <Form.Item // Status barang
                                 name="status"
                                 label="Status"
                                 rules={[{ required: true, message: 'Pilih status barang' }]}
@@ -484,39 +484,39 @@ export default function ManajemenAset() {
                                 <Select placeholder="Pilih status">
                                     <Option value="Baik">Baik</Option>
                                     <Option value="Rusak">Rusak</Option>
-                                </Select>
+                                </Select>// Select untuk memilih status barang
                             </Form.Item>
                         </Form>
                     </Modal>
 
 
                     {/* View Modal */}
-                    <Modal
-                        visible={isViewModalVisible}
-                        footer={null}
-                        closable={false}
-                        centered
-                        bodyStyle={{ padding: 0 }}
-                        className="custom-view-modal"
-                        onCancel={handleViewCancel}
+                    <Modal // Modal untuk melihat detail aset
+                        visible={isViewModalVisible} // Status modal terlihat
+                        footer={null} // Tidak ada footer pada modal ini
+                        closable={false} // Menyembunyikan tombol close bawaan
+                        centered // Menampilkan modal di tengah layar
+                        bodyStyle={{ padding: 0 }} // Mengatur padding body modal menjadi 0
+                        className="custom-view-modal" // Kelas CSS khusus untuk modal ini
+                        onCancel={handleViewCancel} // Fungsi untuk menutup modal lihat detail aset
                     >
-                        <div style={styles.viewHeader}>
+                        <div style={styles.viewHeader}> //  Header modal untuk melihat detail aset
                             <Title level={4} style={{ margin: 0 }}>
                                 Detail Item
                             </Title>
                             <CloseOutlined onClick={handleViewCancel} style={styles.viewClose} />
                         </div>
-                        <div style={styles.viewContent}>
-                            {selectedAsset && (
+                        <div style={styles.viewContent}> // Konten modal untuk melihat detail aset
+                            {selectedAsset && ( // Jika ada aset yang dipilih, tampilkan detailnya
                                 <>
-                                    <div style={styles.viewSection}>
-                                        <Text type="secondary" style={styles.viewLabel}>
-                                            Nama Barang
+                                    <div style={styles.viewSection}> // Bagian untuk menampilkan detail aset
+                                        <Text type="secondary" style={styles.viewLabel}> //  Label untuk nama barang
+                                            Nama Barang /
                                         </Text>
-                                        <Text style={styles.viewValue}>{selectedAsset.nama}</Text>
+                                        <Text style={styles.viewValue}>{selectedAsset.nama}</Text> // Menampilkan nama barang
                                     </div>
 
-                                    <div style={styles.viewSection}>
+                                    <div style={styles.viewSection}> // Bagian untuk menampilkan manufaktur aset
                                         <Text type="secondary" style={styles.viewLabel}>
                                             Manufaktur
                                         </Text>
@@ -526,33 +526,33 @@ export default function ManajemenAset() {
                                     <div style={styles.viewSection}>
                                         <Text type="secondary" style={styles.viewLabel}>
                                             Jumlah
-                                        </Text>
+                                        </Text> // Menampilkan jumlah aset
                                         <Text style={styles.viewValue}>{selectedAsset.jumlah}</Text>
                                     </div>
 
                                     <div style={styles.viewSection}>
                                         <Text type="secondary" style={styles.viewLabel}>
                                             Umur
-                                        </Text>
+                                        </Text> // Menampilkan umur aset
                                         <Text style={styles.viewValue}>{selectedAsset.umur} Bulan</Text>
                                     </div>
 
                                     <div style={styles.viewSection}>
                                         <Text type="secondary" style={styles.viewLabel}>
                                             Status
-                                        </Text>
+                                        </Text> // Menampilkan status aset
                                         <Tag color={selectedAsset.status === 'Baik' ? 'green' : 'red'}>
                                             {selectedAsset.status}
-                                        </Tag>
+                                        </Tag> // Menampilkan status aset dengan tag berwarna
                                     </div>
 
                                     <div style={styles.viewSection}>
                                         <Text type="secondary" style={styles.viewLabel}>
                                             Tanggal Dibuat
-                                        </Text>
+                                        </Text> // Menampilkan tanggal dibuat aset
                                         <Text style={styles.viewValue}>
                                             {new Date(selectedAsset.created_at).toLocaleDateString()}
-                                        </Text>
+                                        </Text> // Mengubah tanggal dibuat ke format lokal
                                     </div>
                                 </>
                             )}
@@ -562,21 +562,21 @@ export default function ManajemenAset() {
                         </div>
                     </Modal>
 
-                    <Modal
-                        visible={resultModal.visible}
-                        onCancel={() => setResultModal(prev => ({ ...prev, visible: false }))}
+                    <Modal // Modal untuk menampilkan hasil operasi (tambah/edit/hapus)
+                        visible={resultModal.visible} // Status modal terlihat
+                        onCancel={() => setResultModal(prev => ({ ...prev, visible: false }))} // Fungsi untuk menutup modal
                         footer={[
                             <Button key="ok" type="primary" onClick={() => setResultModal(prev => ({ ...prev, visible: false }))}>
                                 OK
-                            </Button>,
+                            </Button>, //   Tombol OK untuk menutup modal
                         ]}
                         centered
                     >
                         <div style={{ textAlign: 'center' }}>
                             <Typography.Title level={4} style={{ color: resultModal.success ? 'green' : 'red' }}>
-                                {resultModal.success ? 'Berhasil' : 'Gagal'}
+                                {resultModal.success ? 'Berhasil' : 'Gagal'} // Judul modal sesuai dengan status operasi
                             </Typography.Title>
-                            <Typography.Text>{resultModal.message}</Typography.Text>
+                            <Typography.Text>{resultModal.message}</Typography.Text>//
                         </div>
                     </Modal>
 
@@ -587,7 +587,7 @@ export default function ManajemenAset() {
     );
 }
 
-const styles: { [key: string]: React.CSSProperties } = {
+const styles: { [key: string]: React.CSSProperties } = { // Gaya CSS untuk komponen Manajemen Aset
     root: { minHeight: '100vh', overflowX: 'hidden' },
     main: { marginLeft: 200 },
     content: { background: '#ECF2FF', padding: 24, overflowY: 'auto' },

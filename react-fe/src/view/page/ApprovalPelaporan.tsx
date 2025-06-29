@@ -76,24 +76,24 @@ export default function ApprovalPelaporan() {
     const [role, setRole] = useState<string>('');
 
     useEffect(() => {
-        const fetchData = async () => {
+        const fetchData = async () => { // ambil data approval pelaporan
             setLoading(true);
             try {
                 const res = await api.get('/approval-pelaporan');
                 const approvals = res.data.data;
 
                 const mapped: Approval[] = approvals.map((item: any) => ({
-                    id: item.id,
-                    namaBarang: item.namaBarang,
-                    created_at: item.evidence?.[0]?.created_at || '',
-                    status_approve: item.evidence?.[0]?.status_approve || '',
-                    tanggal_approve: item.evidence?.[0]?.tanggal_approve || '',
-                    url_gambar: item.evidence?.[0]?.url || '',
-                    evidence: item.evidence || [],
-                    manufaktur: item.manufaktur,
-                    riwayat: item.riwayat,
-                    kelayakan: item.kelayakan,
-                    catatan: item.catatan,
+                    id: item.id, // pastikan id ada di response
+                    namaBarang: item.namaBarang, // pastikan namaBarang ada di response
+                    created_at: item.evidence?.[0]?.created_at || '', // gunakan evidence pertama untuk tanggal dibuat
+                    status_approve: item.evidence?.[0]?.status_approve || '', // gunakan evidence pertama untuk status approve
+                    tanggal_approve: item.evidence?.[0]?.tanggal_approve || '', // gunakan evidence pertama untuk tanggal approve
+                    url_gambar: item.evidence?.[0]?.url || '', // gunakan evidence pertama untuk URL gambar
+                    evidence: item.evidence || [], // pastikan evidence ada di response
+                    manufaktur: item.manufaktur, // pastikan manufaktur ada di response
+                    riwayat: item.riwayat, // pastikan riwayat ada di response
+                    kelayakan: item.kelayakan, // pastikan kelayakan ada di response
+                    catatan: item.catatan, // pastikan catatan ada di response
                 }));
 
                 setData(mapped);
