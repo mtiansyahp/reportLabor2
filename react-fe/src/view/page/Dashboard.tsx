@@ -58,25 +58,23 @@ const Dashboard: React.FC = () => {
     // fetch approvals & assets
     useEffect(() => {
         setLoadingChart(true);
-        setLoadingAssets(true);
 
-        Promise.all([
-            fetch('http://localhost:3001/approval-pelaporan').then(r => r.json()),
-            fetch('http://localhost:3001/assets').then(r => r.json()),
-        ])
-            .then(([approvals, assetList]) => {
-                setApprovalData(approvals);
-                setAssets(assetList);
+        fetch('http://127.0.0.1:8000/api/approval-pelaporan')
+            .then(r => r.json())
+            .then((response) => {
+                setApprovalData(response.data); // <- ambil array dari properti "data"
             })
+
             .catch(err => {
                 console.error(err);
                 message.error('Gagal mengambil data');
             })
             .finally(() => {
                 setLoadingChart(false);
-                setLoadingAssets(false);
             });
+
     }, []);
+
 
     // fetch summary from our Laravel API
     useEffect(() => {

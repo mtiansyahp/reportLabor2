@@ -65,17 +65,7 @@ const Navbar: React.FC = () => {
                 </Badge> */}
 
                 {/* Profile avatar + dropdown */}
-                <Dropdown overlay={profileMenu} trigger={['click']}>
-                    <Button type="text" style={styles.profileButton} aria-label="User menu">
-                        <Avatar
-                            src={DEFAULT_AVATAR}
-                            size={32}
-                            alt="Default profile"
-                            style={{ objectFit: 'cover' }}
-                        />
-                        {/* <DownOutlined style={{ marginLeft: 8, fontSize: 18 }} /> */}
-                    </Button>
-                </Dropdown>
+                {/*  */}
             </Space>
         </Header>
     );
