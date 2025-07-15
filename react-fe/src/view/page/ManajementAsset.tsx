@@ -47,7 +47,7 @@ interface Asset { // Definisi tipe data untuk aset
 
 type AssetForm = Omit<Asset, 'id'>; // Tipe data untuk form aset, menghilangkan 'id' karena tidak perlu diinputkan
 
-export default function ManajemenAset() { // Komponen utama Manajemen Aset
+export default function ManajemenAset() {
     const [data, setData] = useState<Asset[]>([]); // Daftar aset yang akan ditampilkan
     const fetchedRef = useRef(false); // Menandai apakah data sudah diambil dari API
     const [filterText, setFilterText] = useState(''); // Teks filter untuk pencarian aset
@@ -174,7 +174,7 @@ export default function ManajemenAset() { // Komponen utama Manajemen Aset
         {
             name: 'Action', // Aksi untuk setiap baris, tidak dapat diurutkan
             cell: row => ( // Menampilkan ikon aksi untuk setiap baris
-                <Space size="middle"> 
+                <Space size="middle">
                     <EyeOutlined
                         style={{ cursor: 'pointer' }}
                         onClick={() => {
@@ -278,7 +278,7 @@ export default function ManajemenAset() { // Komponen utama Manajemen Aset
         try {
             const values = await form.validateFields(); // Validasi form sebelum mengirim data
 
-            if (selectedAsset) { // Jika ada aset yang dipilih untuk diedit
+            if (selectedAsset) {
                 await api.put(`/equipment/${selectedAsset.id}`, { // Mengirim permintaan PUT ke API untuk memperbarui aset
                     nama_item: values.nama,
                     manufaktur: values.manufaktur,
@@ -370,7 +370,7 @@ export default function ManajemenAset() { // Komponen utama Manajemen Aset
                             noHeader // Menyembunyikan header tabel
                         />
 
-                    </Card> 
+                    </Card>
 
                     {/* Add Modal */}
                     <Modal // Modal untuk menambah aset
@@ -380,13 +380,13 @@ export default function ManajemenAset() { // Komponen utama Manajemen Aset
                         onOk={handleAdd} // Fungsi untuk menangani penambahan aset
                         centered // Menampilkan modal di tengah layar
                     >
-                        <Form form={form} layout="vertical"> // Form untuk menambah aset
+                        <Form form={form} layout="vertical">
                             <Form.Item // Nama barang
                                 name="nama"
                                 label="Nama Barang"
                                 rules={[{ required: true, message: 'Masukkan nama barang' }]}
                             >
-                                <Input /> // Input untuk nama barang
+                                <Input />
                             </Form.Item>
 
                             <Form.Item // Manufaktur
@@ -402,15 +402,15 @@ export default function ManajemenAset() { // Komponen utama Manajemen Aset
                                 label="Jumlah"
                                 rules={[{ required: true, message: 'Masukkan jumlah' }]} // Validasi untuk jumlah barang
                             >
-                                <InputNumber min={1} style={{ width: '100%' }} /> // Input untuk jumlah barang, minimal 1
-                            </Form.Item> 
+                                <InputNumber min={1} style={{ width: '100%' }} />
+                            </Form.Item>
 
                             <Form.Item // Umur barang
                                 name="umur"
                                 label="Umur (bulan)"
-                                rules={[{ required: true, message: 'Masukkan umur barang' }]} //    Validasi untuk umur barang
+                                rules={[{ required: true, message: 'Masukkan umur barang' }]}
                             >
-                                <InputNumber min={1} style={{ width: '100%' }} /> // Input untuk umur barang, minimal 1
+                                <InputNumber min={1} style={{ width: '100%' }} />
                             </Form.Item>
 
                             <Form.Item // Status barang
@@ -418,9 +418,9 @@ export default function ManajemenAset() { // Komponen utama Manajemen Aset
                                 label="Status"
                                 rules={[{ required: true, message: 'Pilih status barang' }]} // Validasi untuk status barang
                             >
-                                <Select placeholder="Pilih status"> // Select untuk memilih status barang   
-                                    <Option value="Baik">Baik</Option> // Pilihan status "Baik"
-                                    <Option value="Rusak">Rusak</Option> // Pilihan status "Rusak"
+                                <Select placeholder="Pilih status">
+                                    <Option value="Baik">Baik</Option>
+                                    <Option value="Rusak">Rusak</Option>
                                 </Select>
                             </Form.Item>
                             <Form.Item // Tanggal dibuat
@@ -428,11 +428,11 @@ export default function ManajemenAset() { // Komponen utama Manajemen Aset
                                 label="Tanggal Dibuat"
                                 rules={[{ required: true, message: 'Masukkan tanggal dibuat' }]}
                             >
-                                <DatePicker format="YYYY-MM-DD" style={{ width: '100%' }} /> // Input untuk tanggal dibuat, format YYYY-MM-DD
+                                <DatePicker format="YYYY-MM-DD" style={{ width: '100%' }} />
                             </Form.Item>
 
                         </Form>
-                    </Modal> 
+                    </Modal>
 
 
                     {/* Edit Modal */}
@@ -443,13 +443,14 @@ export default function ManajemenAset() { // Komponen utama Manajemen Aset
                         onOk={handleEdit} // Fungsi untuk menangani pengeditan aset
                         centered // Menampilkan modal di tengah layar
                     >
-                        <Form form={form} layout="vertical"> // Form untuk mengedit aset
+                        <Form form={form} layout="vertical">
                             <Form.Item // Nama barang
                                 name="nama"
                                 label="Nama Barang"
                                 rules={[{ required: true, message: 'Masukkan nama barang' }]}
                             >
-                                <Input /> // Input untuk nama barang
+
+                                <Input />
                             </Form.Item>
 
                             <Form.Item // Manufaktur
@@ -465,7 +466,7 @@ export default function ManajemenAset() { // Komponen utama Manajemen Aset
                                 label="Jumlah"
                                 rules={[{ required: true, message: 'Masukkan jumlah' }]}
                             >
-                                <InputNumber min={1} style={{ width: '100%' }} /> // Input untuk jumlah barang, minimal 1
+                                <InputNumber min={1} style={{ width: '100%' }} />
                             </Form.Item>
 
                             <Form.Item // Umur barang
@@ -473,7 +474,7 @@ export default function ManajemenAset() { // Komponen utama Manajemen Aset
                                 label="Umur (bulan)"
                                 rules={[{ required: true, message: 'Masukkan umur barang' }]} // Validasi untuk umur barang
                             >
-                                <InputNumber min={1} style={{ width: '100%' }} /> // Input untuk umur barang, minimal 1
+                                <InputNumber min={1} style={{ width: '100%' }} />
                             </Form.Item>
 
                             <Form.Item // Status barang
@@ -484,7 +485,7 @@ export default function ManajemenAset() { // Komponen utama Manajemen Aset
                                 <Select placeholder="Pilih status">
                                     <Option value="Baik">Baik</Option>
                                     <Option value="Rusak">Rusak</Option>
-                                </Select>// Select untuk memilih status barang
+                                </Select>
                             </Form.Item>
                         </Form>
                     </Modal>
@@ -500,23 +501,23 @@ export default function ManajemenAset() { // Komponen utama Manajemen Aset
                         className="custom-view-modal" // Kelas CSS khusus untuk modal ini
                         onCancel={handleViewCancel} // Fungsi untuk menutup modal lihat detail aset
                     >
-                        <div style={styles.viewHeader}> //  Header modal untuk melihat detail aset
+                        <div style={styles.viewHeader}>
                             <Title level={4} style={{ margin: 0 }}>
                                 Detail Item
                             </Title>
                             <CloseOutlined onClick={handleViewCancel} style={styles.viewClose} />
                         </div>
-                        <div style={styles.viewContent}> // Konten modal untuk melihat detail aset
+                        <div style={styles.viewContent}>
                             {selectedAsset && ( // Jika ada aset yang dipilih, tampilkan detailnya
                                 <>
-                                    <div style={styles.viewSection}> // Bagian untuk menampilkan detail aset
-                                        <Text type="secondary" style={styles.viewLabel}> //  Label untuk nama barang
+                                    <div style={styles.viewSection}>
+                                        <Text type="secondary" style={styles.viewLabel}>
                                             Nama Barang /
                                         </Text>
-                                        <Text style={styles.viewValue}>{selectedAsset.nama}</Text> // Menampilkan nama barang
+                                        <Text style={styles.viewValue}>{selectedAsset.nama}</Text>
                                     </div>
 
-                                    <div style={styles.viewSection}> // Bagian untuk menampilkan manufaktur aset
+                                    <div style={styles.viewSection}>
                                         <Text type="secondary" style={styles.viewLabel}>
                                             Manufaktur
                                         </Text>
@@ -526,33 +527,33 @@ export default function ManajemenAset() { // Komponen utama Manajemen Aset
                                     <div style={styles.viewSection}>
                                         <Text type="secondary" style={styles.viewLabel}>
                                             Jumlah
-                                        </Text> // Menampilkan jumlah aset
+                                        </Text>
                                         <Text style={styles.viewValue}>{selectedAsset.jumlah}</Text>
                                     </div>
 
                                     <div style={styles.viewSection}>
                                         <Text type="secondary" style={styles.viewLabel}>
                                             Umur
-                                        </Text> // Menampilkan umur aset
+                                        </Text>
                                         <Text style={styles.viewValue}>{selectedAsset.umur} Bulan</Text>
                                     </div>
 
                                     <div style={styles.viewSection}>
                                         <Text type="secondary" style={styles.viewLabel}>
                                             Status
-                                        </Text> // Menampilkan status aset
+                                        </Text>
                                         <Tag color={selectedAsset.status === 'Baik' ? 'green' : 'red'}>
                                             {selectedAsset.status}
-                                        </Tag> // Menampilkan status aset dengan tag berwarna
+                                        </Tag>
                                     </div>
 
                                     <div style={styles.viewSection}>
                                         <Text type="secondary" style={styles.viewLabel}>
                                             Tanggal Dibuat
-                                        </Text> // Menampilkan tanggal dibuat aset
+                                        </Text>
                                         <Text style={styles.viewValue}>
                                             {new Date(selectedAsset.created_at).toLocaleDateString()}
-                                        </Text> // Mengubah tanggal dibuat ke format lokal
+                                        </Text>
                                     </div>
                                 </>
                             )}
@@ -574,9 +575,9 @@ export default function ManajemenAset() { // Komponen utama Manajemen Aset
                     >
                         <div style={{ textAlign: 'center' }}>
                             <Typography.Title level={4} style={{ color: resultModal.success ? 'green' : 'red' }}>
-                                {resultModal.success ? 'Berhasil' : 'Gagal'} // Judul modal sesuai dengan status operasi
+                                {resultModal.success ? 'Berhasil' : 'Gagal'}
                             </Typography.Title>
-                            <Typography.Text>{resultModal.message}</Typography.Text>//
+                            <Typography.Text>{resultModal.message}</Typography.Text>
                         </div>
                     </Modal>
 
