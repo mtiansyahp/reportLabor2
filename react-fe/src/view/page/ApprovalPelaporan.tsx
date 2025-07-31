@@ -27,6 +27,8 @@ import Navbar from '../component/navbar/Navbar';
 import { api } from '../../api/apiAxios';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { DatePicker } from 'antd';
+import dayjs from 'dayjs';
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
@@ -74,6 +76,9 @@ export default function ApprovalPelaporan() {
     const [isViewModalVisible, setIsViewModalVisible] = useState(false);
     const [selectedRows, setSelectedRows] = useState<ApprovalRow[]>([]);
     const [role, setRole] = useState<string>('');
+    const [startDate, setStartDate] = useState<any>(null);
+    const [endDate, setEndDate] = useState<any>(null);
+
 
     useEffect(() => {
         const fetchData = async () => { // ambil data approval pelaporan
@@ -116,7 +121,7 @@ export default function ApprovalPelaporan() {
     }, []);
 
     const transformedData: ApprovalRow[] = useMemo(() => {
-        return data.map(item => {
+        const parsed = data.map(item => {
             const ev = item.evidence?.[0];
             return {
                 id: item.id,
@@ -126,10 +131,29 @@ export default function ApprovalPelaporan() {
                 status_approve: ev?.status_approve || 'Dalam Proses',
                 tanggal_approve: ev?.tanggal_approve || null,
                 url_gambar: ev?.url || '',
-                fullData: item, // ✅ pastikan ini ditambahkan
+                fullData: item,
             };
         });
+
+        // Sort by valid date first (oldest to newest), invalid dates last
+        return parsed.sort((a, b) => {
+            const dateA = new Date(a.created_at);
+            const dateB = new Date(b.created_at);
+            const validA = !isNaN(dateA.getTime());
+            const validB = !isNaN(dateB.getTime());
+
+            if (validA && validB) {
+                return dateA.getTime() - dateB.getTime(); // oldest first
+            } else if (validA) {
+                return -1; // A valid, B invalid → A duluan
+            } else if (validB) {
+                return 1; // B valid, A invalid → B duluan
+            } else {
+                return 0; // keduanya invalid
+            }
+        });
     }, [data]);
+
 
 
 
@@ -230,6 +254,92 @@ export default function ApprovalPelaporan() {
 
     ];
 
+    const handlePrintAll = () => {
+        const filtered = transformedData.filter(item => {
+            const created = dayjs(item.created_at);
+            return (
+                (!startDate || created.isAfter(startDate.subtract(1, 'day'))) &&
+                (!endDate || created.isBefore(endDate.add(1, 'day')))
+            );
+        });
+
+        if (filtered.length === 0) {
+            message.info('Tidak ada data dalam rentang tanggal tersebut');
+            return;
+        }
+
+        const doc = new jsPDF();
+
+        filtered.forEach((item, idx) => {
+            const data = item.fullData;
+            const tanggal = new Date(data.created_at || '').toLocaleDateString('id-ID', {
+                day: '2-digit', month: 'long', year: 'numeric'
+            });
+
+            const evidence = data.evidence?.[0] || {
+                user_maker: '',
+                created_at: '',
+                status_approve: '',
+            };
+
+            if (idx > 0) doc.addPage(); // next page for each item
+
+            doc.setFontSize(12);
+            doc.text(`Prabumulih, ${tanggal}`, 140, 20);
+            doc.text('No.: 0391/PLB-Pbm/V/2025', 20, 30);
+
+            doc.setFont('helvetica', 'bold');
+            doc.text('Kepada Yth.', 20, 45);
+            doc.text('Manajer Operasional', 20, 52);
+            doc.text('PT. Titis Sampurna', 20, 59);
+            doc.text('di Tempat', 20, 66);
+
+            doc.text('Perihal:', 20, 78);
+            doc.text('Permohonan Persetujuan Pelaporan Barang', 38, 78);
+
+            doc.setFont('helvetica', 'normal');
+            doc.text('Dengan hormat,', 20, 88);
+            doc.text('Sehubungan dengan kebutuhan evaluasi kondisi aset, bersama surat ini kami mengajukan', 20, 98);
+            doc.text('permohonan persetujuan pelaporan barang sebagai berikut:', 20, 105);
+
+            let y = 115;
+            const baris = [
+                ['Nama Barang', data.namaBarang || ''],
+                ['Manufaktur', data.manufaktur || ''],
+                ['Riwayat Rusak', data.riwayat || ''],
+                ['Kelayakan', data.kelayakan || ''],
+                ['Catatan', data.catatan || ''],
+            ];
+            baris.forEach(([label, value]) => {
+                doc.text(`${label} : ${value}`, 25, y);
+                y += 8;
+            });
+
+            y += 5;
+            doc.text('Barang tersebut telah diajukan oleh:', 20, y); y += 8;
+            doc.text(`Nama Pengaju  : ${evidence.user_maker || ''}`, 25, y); y += 8;
+            doc.text(
+                `Tanggal Ajuan : ${evidence.created_at
+                    ? new Date(evidence.created_at).toLocaleDateString('id-ID')
+                    : ''
+                }`,
+                25,
+                y
+            ); y += 8;
+            doc.text(`Status Approve: ${evidence.status_approve || ''}`, 25, y); y += 20;
+
+            doc.text('Demikian surat permohonan ini kami sampaikan...', 20, y); y += 8;
+            doc.text('Atas perhatian dan kerja samanya, kami ucapkan terima kasih.', 20, y); y += 20;
+
+            doc.text('Hormat kami,', 20, y); y += 7;
+            doc.text(evidence.user_maker || '', 20, y); y += 7;
+            doc.text('Pengaju Pelaporan', 20, y);
+        });
+
+        doc.save('Semua_Pelaporan.pdf');
+    };
+
+
     const generatePDF = (data: Approval) => {
         const doc = new jsPDF();
 
@@ -328,12 +438,24 @@ export default function ApprovalPelaporan() {
                         style={styles.card}
                         extra={
                             <Space>
-                                <Search
-                                    placeholder="Cari barang atau user..."
-                                    onChange={e => setFilterText(e.target.value)}
-                                    style={{ maxWidth: 300 }}
-                                    allowClear
+                                <DatePicker
+                                    placeholder="Start Date"
+                                    value={startDate}
+                                    onChange={val => setStartDate(val)}
                                 />
+                                <DatePicker
+                                    placeholder="End Date"
+                                    value={endDate}
+                                    onChange={val => setEndDate(val)}
+                                />
+                                <Button
+                                    type="primary"
+                                    onClick={() => handlePrintAll()}
+                                    disabled={!startDate || !endDate}
+                                >
+                                    Cetak Semua
+                                </Button>
+
                                 {role === 'atasan' && (
                                     <>
                                         <Button
@@ -382,6 +504,7 @@ export default function ApprovalPelaporan() {
                                 )}
                             </Space>
                         }
+
                     >
                         <Spin spinning={loading}>
                             <DataTable

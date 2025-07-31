@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ApexOptions } from 'apexcharts';
 import Chart from 'react-apexcharts';
+import { Modal, Table } from 'antd';
 import {
     Layout,
     Row,
@@ -50,6 +51,10 @@ const Dashboard: React.FC = () => {
     const [assets, setAssets] = useState<Asset[]>([]);
     const [loadingChart, setLoadingChart] = useState(false);
     const [loadingAssets, setLoadingAssets] = useState(false);
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [modalLoading, setModalLoading] = useState(false);
+    const [modalData, setModalData] = useState<any[]>([]);
+
 
     // summary state
     const [summary, setSummary] = useState<Summary | null>(null);
@@ -159,6 +164,35 @@ const Dashboard: React.FC = () => {
         [assets]
     );
 
+    const handleCardClick = (filter?: string) => {
+        setModalLoading(true);
+        setIsModalVisible(true);
+
+        let url = 'http://localhost:8000/api/equipment-detail-summary';
+
+        if (filter === 'approval') {
+            url = 'http://localhost:8000/api/approval-pelaporan';
+        } else if (filter) {
+            url += `?kondisi=${encodeURIComponent(filter)}`;
+        }
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                setModalData(data.data);
+            })
+            .catch(err => {
+                console.error(err);
+                message.error('Gagal mengambil data detail');
+            })
+            .finally(() => {
+                setModalLoading(false);
+            });
+    };
+
+
+
+
 
     const layakPercent = totalJumlah > 0 ? Math.round((layakJumlah / totalJumlah) * 100) : 0;
 
@@ -239,98 +273,190 @@ const Dashboard: React.FC = () => {
     ];
 
     return (
-        <Layout style={styles.root}>
-            <Sidebar />
-            <Layout style={styles.main}>
-                <Navbar />
-                <Content style={styles.content}>
-                    <div style={styles.inner}>
+        <>
+            <Layout style={styles.root}>
+                <Sidebar />
+                <Layout style={styles.main}>
+                    <Navbar />
+                    <Content style={styles.content}>
+                        <div style={styles.inner}>
 
-                        {/* Stats Cards */}
-                        <Spin spinning={loadingSummary}>
-                            <Row gutter={[24, 24]}>
-                                {stats.map((s, i) => (
-                                    <Col xs={24} sm={12} md={6} key={i}>
-                                        <Card style={styles.statCard} bodyStyle={{ padding: 20, position: 'relative' }}>
-                                            <div style={styles.cardIconWrapper}>
-                                                {React.cloneElement(s.icon, { style: styles.cardIcon })}
-                                            </div>
-                                            <Title level={3} style={styles.statValue}>{s.value}</Title>
-                                            <Text style={styles.statLabel}>{s.label}</Text>
-                                        </Card>
-                                    </Col>
-                                ))}
-                            </Row>
-                        </Spin>
+                            {/* Stats Cards */}
+                            <Spin spinning={loadingSummary}>
+                                <Row gutter={[24, 24]}>
+                                    {stats.map((s, i) => (
+                                        <Col xs={24} sm={12} md={6} key={i}>
+                                            <Card
+                                                style={styles.statCard}
+                                                bodyStyle={{ padding: 20, position: 'relative', cursor: 'pointer' }}
+                                                onClick={
+                                                    i === 0 ? () => handleCardClick('approval') :                 // Total Pelaporan
+                                                        i === 1 ? () => handleCardClick() :                           // Total Asset
+                                                            i === 2 ? () => handleCardClick('!=Rusak') :                  // Layak
+                                                                i === 3 ? () => handleCardClick('Rusak') :                    // Tidak Layak
+                                                                    undefined
+                                                }
+                                            >
+                                                <div style={styles.cardIconWrapper}>
+                                                    {React.cloneElement(s.icon, { style: styles.cardIcon })}
+                                                </div>
+                                                <Title level={3} style={styles.statValue}>{s.value}</Title>
+                                                <Text style={styles.statLabel}>{s.label}</Text>
+                                            </Card>
+                                        </Col>
+                                    ))}
 
-                        {/* Approval Chart */}
-                        <Row gutter={[24, 24]} style={{ marginTop: 24 }}>
-                            <Col xs={24} lg={16}>
-                                <Card title="Approval Chart (7 Hari Terakhir)"
-                                    style={styles.chartCard} headStyle={styles.cardHead}
-                                    bodyStyle={{ minHeight: 260 }}>
-                                    <Spin spinning={loadingChart}>
-                                        <Chart options={areaOptions} series={series} type="area" height={260} />
-                                    </Spin>
-                                </Card>
-                            </Col>
-                            <Col xs={24} lg={8}>
-                                <Card title="Persentase Asset Layak"
-                                    style={styles.chartCard} headStyle={styles.cardHead}
-                                    bodyStyle={{ textAlign: 'center', minHeight: 260, paddingTop: 40 }}>
-                                    {loadingAssets ? (
-                                        <Spin />
-                                    ) : (
-                                        <>
-                                            <Chart
-                                                options={radialOptions}
-                                                series={[summary ? summary.ratio_asset_layak * 100 : 0]}
-                                                type="radialBar"
-                                                height={200}
-                                            />
-                                            <Text style={{ marginTop: 16 }}>
-                                                {summary
-                                                    ? `${summary.total_asset_layak} dari ${summary.total_asset} unit`
-                                                    : '-'}
-                                            </Text>
-                                        </>
-                                    )}
-                                </Card>
-                            </Col>
-                        </Row>
+                                </Row>
+                            </Spin>
 
-                        {/* Recent Pelaporan */}
-                        <Row gutter={[24, 24]} style={{ marginTop: 24, marginBottom: 24 }}>
-                            <Col xs={24} md={12}>
-                                <Card title={
-                                    <div style={styles.activitiesHeader}>
-                                        <span>Recent Pelaporan</span>
-                                        <Link to="/approval-pelaporan">View All</Link>
-                                    </div>}
-                                    style={styles.chartCard} headStyle={styles.cardHead}
-                                    bodyStyle={{ padding: 10 }}>
-                                    <List itemLayout="horizontal" dataSource={recentActivities} split={false}
-                                        renderItem={item => (
-                                            <List.Item style={styles.listItem}>
-                                                <List.Item.Meta
-                                                    title={<Text style={styles.listTitle}>{item.title}</Text>}
-                                                    description={<Text type="secondary">{item.date}</Text>}
+                            {/* Approval Chart */}
+                            <Row gutter={[24, 24]} style={{ marginTop: 24 }}>
+                                <Col xs={24} lg={16}>
+                                    <Card title="Approval Chart (7 Hari Terakhir)"
+                                        style={styles.chartCard} headStyle={styles.cardHead}
+                                        bodyStyle={{ minHeight: 260 }}>
+                                        <Spin spinning={loadingChart}>
+                                            <Chart options={areaOptions} series={series} type="area" height={260} />
+                                        </Spin>
+                                    </Card>
+                                </Col>
+                                <Col xs={24} lg={8}>
+                                    <Card title="Persentase Asset Layak"
+                                        style={styles.chartCard} headStyle={styles.cardHead}
+                                        bodyStyle={{ textAlign: 'center', minHeight: 260, paddingTop: 40 }}>
+                                        {loadingAssets ? (
+                                            <Spin />
+                                        ) : (
+                                            <>
+                                                <Chart
+                                                    options={radialOptions}
+                                                    series={[summary ? summary.ratio_asset_layak * 100 : 0]}
+                                                    type="radialBar"
+                                                    height={200}
                                                 />
-                                            </List.Item>
-                                        )} />
-                                </Card>
-                            </Col>
-                            <Col xs={24} md={12}>
-                                <Card title="Monthly Active Users"
-                                    style={styles.chartCard} headStyle={styles.cardHead}
-                                    bodyStyle={{ minHeight: 240 }} />
-                            </Col>
-                        </Row>
+                                                <Text style={{ marginTop: 16 }}>
+                                                    {summary
+                                                        ? `${summary.total_asset_layak} dari ${summary.total_asset} unit`
+                                                        : '-'}
+                                                </Text>
+                                            </>
+                                        )}
+                                    </Card>
+                                </Col>
+                            </Row>
 
-                    </div>
-                </Content>
+                            {/* Recent Pelaporan */}
+                            <Row gutter={[24, 24]} style={{ marginTop: 24, marginBottom: 24 }}>
+                                <Col xs={24} md={12}>
+                                    <Card title={
+                                        <div style={styles.activitiesHeader}>
+                                            <span>Recent Pelaporan</span>
+                                            <Link to="/approval-pelaporan">View All</Link>
+                                        </div>}
+                                        style={styles.chartCard} headStyle={styles.cardHead}
+                                        bodyStyle={{ padding: 10 }}>
+                                        <List itemLayout="horizontal" dataSource={recentActivities} split={false}
+                                            renderItem={item => (
+                                                <List.Item style={styles.listItem}>
+                                                    <List.Item.Meta
+                                                        title={<Text style={styles.listTitle}>{item.title}</Text>}
+                                                        description={<Text type="secondary">{item.date}</Text>}
+                                                    />
+                                                </List.Item>
+                                            )} />
+                                    </Card>
+                                </Col>
+                                <Col xs={24} md={12}>
+                                    <Card title="Monthly Active Users"
+                                        style={styles.chartCard} headStyle={styles.cardHead}
+                                        bodyStyle={{ minHeight: 240 }} />
+                                </Col>
+                            </Row>
+
+                        </div>
+                    </Content>
+                </Layout>
             </Layout>
-        </Layout>
+            <Modal
+                title="Detail Data"
+                open={isModalVisible}
+                onCancel={() => setIsModalVisible(false)}
+                footer={null}
+                width={900}
+            >
+                <Spin spinning={modalLoading}>
+                    <Table
+                        rowKey={(record) => record.id || record.equipment_id}
+                        dataSource={modalData}
+                        pagination={{ pageSize: 5 }}
+                        columns={
+                            modalData.length > 0 && modalData[0]?.namaBarang
+                                ? [
+                                    {
+                                        title: 'Nama Barang',
+                                        dataIndex: 'namaBarang',
+                                        key: 'namaBarang',
+                                    },
+                                    {
+                                        title: 'Manufaktur',
+                                        dataIndex: 'manufaktur',
+                                        key: 'manufaktur',
+                                    },
+                                    {
+                                        title: 'Riwayat',
+                                        dataIndex: 'riwayat',
+                                        key: 'riwayat',
+                                    },
+                                    {
+                                        title: 'Kelayakan',
+                                        dataIndex: 'kelayakan',
+                                        key: 'kelayakan',
+                                    },
+                                    {
+                                        title: 'Status Approve',
+                                        dataIndex: ['evidences', 0, 'status_approve'],
+                                        key: 'status_approve',
+                                        render: (val: string | null) => val ?? 'Belum di-approve',
+                                    },
+                                ]
+                                : [
+                                    {
+                                        title: 'Nama Asset',
+                                        dataIndex: 'equipment_nama',
+                                        key: 'equipment_nama',
+                                    },
+                                    {
+                                        title: 'Manufaktur',
+                                        dataIndex: 'equipment_manufaktur',
+                                        key: 'equipment_manufaktur',
+                                    },
+                                    {
+                                        title: 'Kondisi',
+                                        dataIndex: 'kondisi_barang',
+                                        key: 'kondisi_barang',
+                                    },
+                                    {
+                                        title: 'Jumlah',
+                                        dataIndex: 'equipment_quantity',
+                                        key: 'equipment_quantity',
+                                    },
+                                    {
+                                        title: 'Pelaporan',
+                                        dataIndex: 'approval_namaBarang',
+                                        key: 'approval_namaBarang',
+                                    },
+                                    {
+                                        title: 'Status Approve',
+                                        dataIndex: 'status_approve',
+                                        key: 'status_approve',
+                                        render: (val: string | null) => val ?? 'Belum di-approve',
+                                    },
+                                ]
+                        }
+                    />
+                </Spin>
+            </Modal>
+        </>
     );
 };
 
